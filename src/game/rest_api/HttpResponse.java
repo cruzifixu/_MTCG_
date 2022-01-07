@@ -30,6 +30,6 @@ public class HttpResponse implements HttpResponse_interface
     @Override
     public void write(BufferedWriter writer, int code)
     {
-
+        // hello ok
     }
 }
