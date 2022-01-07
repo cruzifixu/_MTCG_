@@ -6,7 +6,7 @@ import java.net.ServerSocket;
 public class RestServer implements Runnable, RestServer_interface
 {
     private static ServerSocket listener = null;
-    private int port;
+    private final int port;
 
     public RestServer(int port)
     {
@@ -19,23 +19,18 @@ public class RestServer implements Runnable, RestServer_interface
         System.out.println("Server has been started");
         try
         {
-            this.listener = new ServerSocket(port);
-            System.out.println("listening from: " + this.listener.getLocalPort());
+            listener = new ServerSocket(port);
+            System.out.println("listening from: " + listener.getLocalPort());
             while(true)
             {
-                _socket socket = new _socket(this.listener.accept());
-                System.out.println("New connection from: " + this.listener.getLocalPort());
+                _socket socket = new _socket(listener.accept());
+                System.out.println("New connection from: " + listener.getLocalPort());
                 // create Thread - runs outside of thread
                 Thread thread = new Thread(() -> {
-                    Request req = null;
                     try {
-                        req = new Request(socket);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    RequestHandler handler = new RequestHandler(req);
-                    try {
-                        handler.Handler();
+                        Request req = new Request(socket);
+                        RequestHandler handler = new RequestHandler(req, socket);
+                        handler.Handler(req);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -46,7 +41,6 @@ public class RestServer implements Runnable, RestServer_interface
         catch (IOException e)
         {
             e.printStackTrace();
-            return;
         }
     }
 

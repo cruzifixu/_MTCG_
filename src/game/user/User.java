@@ -6,6 +6,8 @@ public class User implements user_Interface
     @Getter
     int ID;
     @Getter
+    int token;
+    @Getter
     String username;
     @Getter
     String password;

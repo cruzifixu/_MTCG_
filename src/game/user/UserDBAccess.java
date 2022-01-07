@@ -10,21 +10,20 @@ public class UserDBAccess implements UserDBAccess_Interface
 {
 
     @Override
-    public String getUser(int ID) throws SQLException {
+    public String getUser(String user) throws SQLException {
         Connection conn = DatabaseConn.getInstance().getConn();
         PreparedStatement sta = conn.prepareStatement(
-                "SELECT * FROM users WHERE ID = ?;"
+                "SELECT * FROM users WHERE username = ?;"
         );
-        sta.setString(1, String.valueOf(ID));
+        sta.setString(1, String.valueOf(user));
         ResultSet res = sta.executeQuery();
         StringBuilder userData = new StringBuilder();
 
         // get userdata results
         if(res.next()) {
-            userData.append(res.getString(1)).append("\n").append(res.getString(2)).append("\n")
-                    .append(res.getString(3)).append("\n");
+            userData.append(res.getString(2)).append("\n").append(res.getString(3)).append("\n")
+                    .append(res.getString(4)).append("\n");
         }
-        else return null;
 
         // close everything before returning data
         res.close();
@@ -35,20 +34,21 @@ public class UserDBAccess implements UserDBAccess_Interface
     }
 
     @Override
-        public String addUser(String username, String psw)
+    public String addUser(String username, String psw)
     {
         Connection conn = DatabaseConn.getInstance().getConn();
         try {
             PreparedStatement sta = conn.prepareStatement(
-                    "INSERT INTO users (username, password, coins) VALUES (?, ?, ?);"
+                    "INSERT INTO users (token, username, password, coins) VALUES (?, ?, ?, ?);"
             );
-            sta.setString(1, username);
-            sta.setString(2, psw);
-            sta.setString(3, "0");
+            sta.setString(1, " ");
+            sta.setString(2, username);
+            sta.setString(3, psw);
+            sta.setInt(4, 0);
 
             int affectedRows = sta.executeUpdate();
 
-            // couldnt get executed
+            // couldn't get executed
             if (affectedRows == 0) {
                 return null;
             }
@@ -58,7 +58,7 @@ public class UserDBAccess implements UserDBAccess_Interface
                     // close
                     sta.close();
                     conn.close();
-                    return this.getUser(generatedKeys.getInt(1));
+                    return this.getUser(username);
                 }
             }
             // close
@@ -66,6 +66,7 @@ public class UserDBAccess implements UserDBAccess_Interface
             conn.close();
         } catch (SQLException e) {
             e.printStackTrace();
+            return null;
         }
         return null;
     }

@@ -13,17 +13,17 @@ public class Request implements Request_Interface
 {
     @Getter
     HashMap<String, String> headers;
+    @Getter
     private _socket socket;
-    private String method;
     private String path;
     private String host;
     private String content;
-    public BufferedWriter writer;
+    @Getter
+    private PrintWriter writer;
 
     public Request(_socket socket) throws IOException {
-
         this.socket = socket;
-        this.writer = new BufferedWriter(new OutputStreamWriter(this.socket.getOutputStream()));
+        this.writer = new PrintWriter(this.socket.getOutputStream(),true);
     }
 
     @Override
@@ -36,8 +36,7 @@ public class Request implements Request_Interface
     }
 
     @Override
-    public String readBody(BufferedReader reader, int contentlength)
-    {
+    public String readBody(BufferedReader reader, int contentlength) throws IOException {
         StringBuilder bob = new StringBuilder(10000);
         char[] buffer = new char[1024];
         int TotalLength = 0;
@@ -61,11 +60,14 @@ public class Request implements Request_Interface
     @Override
     public String getHttpsContent()
     {
+        // HttpResponse response = HttpResponse.getInstance();
+        //response.setWriter(writer);
+
         if(content != null && !content.isBlank()) return content;
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(this.socket.getInputStream())))
         {
-            //writeGetRequest(writer);
+            //writeGetRequest(this.writer);
             int contentLength = readHttpHeader(reader);
             return content = readBody(reader, contentLength);
         }
@@ -77,7 +79,7 @@ public class Request implements Request_Interface
     }
 
     @Override
-    public void writeGetRequest(BufferedWriter writer) throws IOException {
+    public void writeGetRequest(PrintWriter writer) {
         writer.write("GET / HTTP/1.1\r\n");
         writer.write("Host: " + this.host + "\r\n");
         writer.write("Accept: */*\r\n" );
@@ -103,7 +105,6 @@ public class Request implements Request_Interface
                 m = line.split(" ");
                 this.host = m[1];
             }
-            System.out.println(line);
             if(line.isBlank()) break;
             if(line.toLowerCase().startsWith("POST"))
             if(line.toLowerCase().startsWith("content-length:"))
@@ -112,23 +113,4 @@ public class Request implements Request_Interface
         }
         return contentlength;
     }
-
-    @Override
-    public List<String> getContentStringsFromRegex(String pattern, int group)
-    {
-        Pattern regex = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-        final String httpsContent = getHttpsContent();
-        Matcher matcher = regex.matcher(httpsContent);
-        ArrayList<String> results = new ArrayList<>();
-        while(matcher.find()) results.add(matcher.group(group).trim());
-
-        return results;
-    }
-
-    @Override
-    public List<String> getContentStringsRegexFromRegex(String pattern)
-    {
-        return getContentStringsFromRegex(pattern, 1);
-    }
-
 }
