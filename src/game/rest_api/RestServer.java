@@ -1,7 +1,8 @@
 package game.rest_api;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
+import java.net.Socket;
 
 public class RestServer implements Runnable, RestServer_interface
 {
@@ -23,19 +24,27 @@ public class RestServer implements Runnable, RestServer_interface
             System.out.println("listening from: " + listener.getLocalPort());
             while(true)
             {
-                _socket socket = new _socket(listener.accept());
+                Socket socket = listener.accept();
                 System.out.println("New connection from: " + listener.getLocalPort());
                 // create Thread - runs outside of thread
                 Thread thread = new Thread(() -> {
                     try {
-                        Request req = new Request(socket);
-                        RequestHandler handler = new RequestHandler(req, socket);
-                        handler.Handler(req);
+                        InputStream is = socket.getInputStream();
+                        InputStreamReader isr = new InputStreamReader(is);
+                        BufferedReader br = new BufferedReader(isr);
+                        OutputStream os = socket.getOutputStream();
+                        PrintWriter pw = new PrintWriter(os);
+                        HttpRequestImpl req = new HttpRequestImpl(br);
+                        HttpRequestHandlerImpl handler = new HttpRequestHandlerImpl(req);
+                        HttpResponse response = handler.handle(req);
+                        pw.println(response.getPayload());
+                        pw.flush();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 });
                 thread.start();
+
             }
         }
         catch (IOException e)
