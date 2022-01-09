@@ -1,10 +1,8 @@
 package game.user;
 
 import game.db.DatabaseConn;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+
+import java.sql.*;
 
 public class UserDBAccess implements UserDBAccess_Interface
 {
@@ -40,7 +38,7 @@ public class UserDBAccess implements UserDBAccess_Interface
         try {
             PreparedStatement sta = conn.prepareStatement(
                     "INSERT INTO users (token, username, password, coins) VALUES (?, ?, ?, ?);"
-            );
+                    , Statement.RETURN_GENERATED_KEYS);
             sta.setString(1, " ");
             sta.setString(2, username);
             sta.setString(3, psw);
