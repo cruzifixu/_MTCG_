@@ -16,7 +16,7 @@ public class Trading {
     protected int getOffer() {
         return this.Offer;
     }
-    // trade cards player wanted to trade
+    // trade cards_impl player wanted to trade
     protected void tradeCards(ArrayList<Cards> deckp1, ArrayList<Cards> deckp2) {
 
     }

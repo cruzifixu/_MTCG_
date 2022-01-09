@@ -3,9 +3,9 @@ package game;
 import java.util.ArrayList;
 
 public class Battles {
-    //player one deck cards
+    //player one deck cards_impl
     protected ArrayList<Cards> p1cards;
-    //player two deck cards
+    //player two deck cards_impl
     protected ArrayList<Cards> p2cards;
     // players
     protected String playerOne;

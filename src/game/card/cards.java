@@ -1,14 +1,6 @@
 package game.card;
 
-public class cards implements card_interface
-{
-    protected int damage;
-    protected String ElementType;
+public interface cards {
+    public String getElementType();
 
-    @Override
-    public String getElementType()
-    {
-
-        return "";
-    }
 }

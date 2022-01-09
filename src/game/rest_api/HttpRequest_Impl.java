@@ -6,7 +6,7 @@ import java.io.*;
 import java.net.Socket;
 import java.util.HashMap;
 
-public class HttpRequestImpl implements Request
+public class HttpRequest_Impl implements HttpRequest
 {
     @Getter
     HashMap<String, String> headers;
@@ -16,8 +16,10 @@ public class HttpRequestImpl implements Request
     private String host;
     private String content;
     private BufferedReader reader;
+    private String token;
+    private String authorizedUser;
 
-    public HttpRequestImpl(BufferedReader br) {
+    public HttpRequest_Impl(BufferedReader br) {
         this.reader = br;
     }
 
@@ -30,7 +32,7 @@ public class HttpRequestImpl implements Request
         return (content != null) ? content : getHttpsContent();
     }
 
-
+    @Override
     public String readBody(int contentlength) throws IOException {
         StringBuilder bob = new StringBuilder(10000);
         char[] buffer = new char[1024];
@@ -52,6 +54,7 @@ public class HttpRequestImpl implements Request
         return bob.toString();
     }
 
+    @Override
     public int readHttpHeader() throws IOException {
         String line;
         String[] m;
@@ -70,15 +73,20 @@ public class HttpRequestImpl implements Request
                 this.host = m[1];
             }
             if(line.isBlank()) break;
-            if(line.toLowerCase().startsWith("POST"))
-                if(line.toLowerCase().startsWith("content-length:"))
-                    contentlength = Integer.parseInt(line.substring(15).trim());
+            if(line.toLowerCase().startsWith("content-length:"))
+            { contentlength = Integer.parseInt(line.substring(15).trim()); }
+            if(line.toLowerCase().startsWith("authorization: "))
+            {
+                m = line.split(":");
+                this.token = m[1];
+                this.authorizeRequest();
+            }
 
         }
         return contentlength;
     }
 
-
+    @Override
     public String getHttpsContent() {
 
         if(content != null && !content.isBlank()) return content;
@@ -92,5 +100,12 @@ public class HttpRequestImpl implements Request
         return "";
     }
 
+    @Override
+    public void authorizeRequest()
+    {
+        String[] tokenParts = this.token.split(" ");
+        String[] tokenPart = tokenParts[1].split("-");
+        this.authorizedUser = tokenPart[0];
+    }
 
 }

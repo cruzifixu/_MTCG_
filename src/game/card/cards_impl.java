@@ -1,7 +1,9 @@
 package game.card;
 
-public class monster_card extends cards_impl {
-
+public class cards_impl implements cards
+{
+    protected int damage;
+    protected String ElementType;
 
     @Override
     public String getElementType()

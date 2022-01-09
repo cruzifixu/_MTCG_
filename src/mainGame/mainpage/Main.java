@@ -1,6 +1,5 @@
 package mainGame.mainpage;
-import game.*;
-import game.rest_api.RestServer;
+import game.rest_api.RestServer_impl;
 
 public class Main {
 
@@ -9,7 +8,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception
     {
-        Thread restService = new Thread(new RestServer(10001));
+        Thread restService = new Thread(new RestServer_impl(10001));
         restService.start();
     }
 

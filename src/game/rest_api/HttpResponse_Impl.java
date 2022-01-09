@@ -1,7 +1,8 @@
 package game.rest_api;
 import lombok.Getter;
+import lombok.Setter;
 
-public class HttpResponseImpl implements HttpResponse
+public class HttpResponse_Impl implements HttpResponse
 {
     @Getter
     String version;
@@ -16,15 +17,15 @@ public class HttpResponseImpl implements HttpResponse
     @Getter
     int content_length;
 
-    @Getter
-    String RESPONSE;
+     @Setter @Getter
+     String RESPONSE;
 
-    @Override
+     @Override
     public String getPayload() {
         return this.RESPONSE;
     }
 
-    public HttpResponseImpl() {
+    public HttpResponse_Impl() {
         this.version = "HTTP/1.1";
         this.statusMessage = "OK";
         this.statusCode = 200;
@@ -33,14 +34,14 @@ public class HttpResponseImpl implements HttpResponse
         this.content_length = 0;
     }
 
-    public HttpResponseImpl(int code) {
+    public HttpResponse_Impl(int code) {
         this();
         this.statusCode = code;
 
         switch(code)
         {
             case 200 -> this.statusMessage = "OK";
-            case 400 -> this.statusMessage = "Bad Request";
+            case 400 -> this.statusMessage = "Bad HttpRequest";
             case 401 -> this.statusMessage = "unauthorized";
             case 403 -> this.statusMessage = "forbidden";
             case 404 -> this.statusMessage = "Not found";
@@ -53,8 +54,9 @@ public class HttpResponseImpl implements HttpResponse
         bob.append("Content-type: ").append(content_type).append("\r\n");
         bob.append("Content-length: ").append(content_length).append("\r\n");
 
-        //System.out.println(bob);
-        this.RESPONSE = bob.toString();
+        System.out.println(bob);
+        this.setRESPONSE(bob.toString());
+        //this.RESPONSE = bob.toString();
     }
 
 }
