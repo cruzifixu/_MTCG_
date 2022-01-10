@@ -1,6 +1,8 @@
 package game;
 
-public class spellCard extends Cards {
+import game.card.Cards_impl;
+
+public class spellCard extends Cards_impl {
     protected int duration; // duration of spell card - 1,2 .. rounds
     protected boolean healing; //if spell card heals player or not
 

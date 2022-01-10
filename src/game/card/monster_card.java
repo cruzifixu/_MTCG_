@@ -1,6 +1,6 @@
 package game.card;
 
-public class monster_card extends cards_impl {
+public class monster_card extends Cards_impl {
 
 
     @Override

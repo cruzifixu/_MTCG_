@@ -1,16 +1,18 @@
 package game;
+import game.card.Cards_impl;
+
 import java.util.ArrayList;
 
 public class Deck {
-    protected ArrayList<Cards> chosenDeck;
+    protected ArrayList<Cards_impl> chosenDeck;
 
     // set Deck
-    protected void setDeck(ArrayList<Cards> CardsChosen) {
+    protected void setDeck(ArrayList<Cards_impl> CardsChosen) {
         this.chosenDeck.clear();
         this.chosenDeck = CardsChosen;
     }
     // get chosen Deck
-    protected ArrayList<Cards> getChosenDeck() {
+    protected ArrayList<Cards_impl> getChosenDeck() {
         return this.chosenDeck;
     }
     // remove chosen card
