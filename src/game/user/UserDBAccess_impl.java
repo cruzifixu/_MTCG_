@@ -56,18 +56,6 @@ public class UserDBAccess_impl implements UserDBAccess
 
             return this.getUser(username);
 
-            /*try (ResultSet generatedKeys = sta.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    // close
-                    sta.close();
-                    conn.close();
-                    return this.getUser(username);
-                }
-            }
-
-             */
-            // close
-
         } catch (SQLException e) {
             e.printStackTrace();
             return null;

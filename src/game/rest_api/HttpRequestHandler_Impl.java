@@ -36,9 +36,8 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
         ObjectMapper mapper= new ObjectMapper();
         JsonNode node=mapper.readTree(requestContent);
         UserDBAccess_impl userDBAccess_impl = new UserDBAccess_impl();
+        CardsDBAccess_impl cardDBAccess_impl = new CardsDBAccess_impl();
         String res;
-
-        //System.out.println("node " + node);
 
         switch(req.getPath())
         {
@@ -47,52 +46,48 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 String psw = node.get("Password").getValueAsText();
                 res = userDBAccess_impl.addUser(user, psw);
 
-                if(res != null)
-                {
-                    response = new HttpResponse_Impl(200);
-                }
-                else
-                {
-                    response = new HttpResponse_Impl(400);
-                }
+                if(res != null) { response = new HttpResponse_Impl(200, "user created"); }
+                else { response = new HttpResponse_Impl(400, "user not created"); }
             }
             case "/sessions" -> {
                 String user = node.get("Username").getValueAsText();
                 String psw = node.get("Password").getValueAsText();
                 res = userDBAccess_impl.getUser(user);
-                if(res.contains(psw)) { response = new HttpResponse_Impl(200); }
-                else { response = new HttpResponse_Impl(400); }
+                if(res.contains(psw)) { response = new HttpResponse_Impl(200, "user logged in"); }
+                else { response = new HttpResponse_Impl(400, "user not logged in, wrong password or username"); }
             }
             case "/packages" -> {
                 ArrayList<String> oneCard = new ArrayList<>(3);
                 boolean success = traverse(node, oneCard);
                 this.count++;
-                if(!success) { response = new HttpResponse_Impl(500); }
-                else response = new HttpResponse_Impl(200);
+                if(!success) { response = new HttpResponse_Impl(500, "package not submitted"); }
+                else response = new HttpResponse_Impl(200, "package created");
             }
             case "/transactions/packages" -> {
-                System.out.println("transaction");
-                response = new HttpResponse_Impl(200);
+                String user = req.getAuthorizedUser();
+                boolean success = cardDBAccess_impl.acquirePackage(user);
+                if(success) { response = new HttpResponse_Impl(200, "package bought"); }
+                else { response = new HttpResponse_Impl(400, "not enough money"); }
             }
             case "/Cards_impl" -> {
                 System.out.println("Cards_impl");
-                response = new HttpResponse_Impl(200);
+                //response = new HttpResponse_Impl(200, "");
             }
             case "/deck" -> {
                 System.out.println("deck");
-                response = new HttpResponse_Impl(200);
+                //response = new HttpResponse_Impl(200);
             }
             case "/tradings" -> {
                 System.out.println("tradings");
-                response = new HttpResponse_Impl(200);
+                //response = new HttpResponse_Impl(200);
             }
             case "/stats" -> {
                 System.out.println("stats");
-                response = new HttpResponse_Impl(200);
+                //response = new HttpResponse_Impl(200);
             }
             case "/score" -> {
                 System.out.println("score");
-                response = new HttpResponse_Impl(200);
+                //response = new HttpResponse_Impl(200);
             }
         }
 
@@ -103,7 +98,7 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
     {
         if(root.isObject()){
             Iterator<String> fieldNames = root.getFieldNames();
-
+            // iterate through all field names
             while(fieldNames.hasNext()) {
                 String fieldName = fieldNames.next();
                 JsonNode fieldValue = root.get(fieldName);
@@ -111,11 +106,12 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
             }
         } else if(root.isArray()){
             ArrayNode arrayNode = (ArrayNode) root;
+            // iterate through array
             for(int i = 0; i < arrayNode.size(); i++) {
                 JsonNode arrayElement = arrayNode.get(i);
                 traverse(arrayElement, oneCard);
             }
-        } else {
+        } else { // single value field
             if(oneCard.size() < 15)
             {
                 oneCard.add(root.getValueAsText());

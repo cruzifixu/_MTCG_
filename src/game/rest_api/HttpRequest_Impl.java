@@ -17,6 +17,7 @@ public class HttpRequest_Impl implements HttpRequest
     private String content;
     private BufferedReader reader;
     private String token;
+    @Getter
     private String authorizedUser;
 
     public HttpRequest_Impl(BufferedReader br) {

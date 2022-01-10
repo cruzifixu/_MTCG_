@@ -16,6 +16,8 @@ public class HttpResponse_Impl implements HttpResponse
     String content_type;
     @Getter
     int content_length;
+    @Getter
+    String body;
 
      @Setter @Getter
      String RESPONSE;
@@ -32,11 +34,15 @@ public class HttpResponse_Impl implements HttpResponse
         this.content_type = "application/json";
         this.host = "127.0.0.1";
         this.content_length = 0;
+        this.body = "";
+
     }
 
-    public HttpResponse_Impl(int code) {
+    public HttpResponse_Impl(int code, String message) {
         this();
         this.statusCode = code;
+        this.body = message;
+        this.content_length = this.body.length();
 
         switch(code)
         {
@@ -53,6 +59,7 @@ public class HttpResponse_Impl implements HttpResponse
         bob.append("Host: ").append(host).append("\r\n");
         bob.append("Content-type: ").append(content_type).append("\r\n");
         bob.append("Content-length: ").append(content_length).append("\r\n");
+        bob.append("\r\n"+this.body); // body missing
 
         System.out.println(bob);
         this.setRESPONSE(bob.toString());
