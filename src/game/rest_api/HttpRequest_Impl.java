@@ -12,6 +12,8 @@ public class HttpRequest_Impl implements HttpRequest
     HashMap<String, String> headers;
     @Getter
     private Socket socket;
+    @Getter
+    private  String method;
     private String path;
     private String host;
     private String content;
@@ -24,9 +26,7 @@ public class HttpRequest_Impl implements HttpRequest
         this.reader = br;
     }
 
-
     public String getPath() { return this.path; }
-
 
     public String getContent()
     {
@@ -34,22 +34,26 @@ public class HttpRequest_Impl implements HttpRequest
     }
 
     @Override
-    public String readBody(int contentlength) throws IOException {
+    public String readBody(int ContentLength) throws IOException {
         StringBuilder bob = new StringBuilder(10000);
         char[] buffer = new char[1024];
         int TotalLength = 0;
         int length = 0;
-        while(true)
+        if(ContentLength != 0)
         {
-            try {
-                if (!((length = reader.read(buffer)) != -1)) break;
-            } catch (IOException e) {
-                e.printStackTrace();
+            while(true)
+            {
+                try {
+                    if (!((length = reader.read(buffer)) != -1)) break;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                bob.append(buffer, 0, length);
+                TotalLength += length;
+                if(TotalLength >= ContentLength) break;
             }
-            bob.append(buffer, 0, length);
-            TotalLength += length;
-            if(TotalLength >= contentlength) break;
         }
+
 
         //System.out.println(bob.toString());
         return bob.toString();
@@ -59,13 +63,14 @@ public class HttpRequest_Impl implements HttpRequest
     public int readHttpHeader() throws IOException {
         String line;
         String[] m;
-        int contentlength = 0, count = 0;
+        int ContentLength = 0, count = 0;
 
         while((line = reader.readLine()) != null)
         {
             if(count++ == 0)
             {
                 m = line.split(" ");
+                this.method = m[0];
                 this.path = m[1];
             }
             if(count++ == 3)
@@ -75,7 +80,7 @@ public class HttpRequest_Impl implements HttpRequest
             }
             if(line.isBlank()) break;
             if(line.toLowerCase().startsWith("content-length:"))
-            { contentlength = Integer.parseInt(line.substring(15).trim()); }
+            { ContentLength = Integer.parseInt(line.substring(15).trim()); }
             if(line.toLowerCase().startsWith("authorization: "))
             {
                 m = line.split(":");
@@ -84,28 +89,25 @@ public class HttpRequest_Impl implements HttpRequest
             }
 
         }
-        return contentlength;
+        return ContentLength;
     }
 
     @Override
     public String getHttpsContent() {
-
-        if(content != null && !content.isBlank()) return content;
-
         try {
             int contentLength = this.readHttpHeader();
-            return content = readBody(contentLength);
+            content = readBody(contentLength);
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
-        return "";
+        return content;
     }
 
     @Override
     public void authorizeRequest()
     {
         String[] tokenParts = this.token.split(" ");
-        String[] tokenPart = tokenParts[1].split("-");
+        String[] tokenPart = tokenParts[2].split("-");
         this.authorizedUser = tokenPart[0];
     }
 

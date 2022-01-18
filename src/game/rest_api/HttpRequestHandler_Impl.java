@@ -1,6 +1,5 @@
 package game.rest_api;
 
-import game.card.CardsDBAccess;
 import game.card.CardsDBAccess_impl;
 import game.user.UserDBAccess_impl;
 import lombok.Getter;
@@ -27,16 +26,23 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
         this.req = req;
     }
 
-
-
     @Override
     public HttpResponse_Impl handle() throws IOException, SQLException {
-        HttpResponse_Impl response = null;
-        String requestContent = req.getHttpsContent();
-        ObjectMapper mapper= new ObjectMapper();
-        JsonNode node=mapper.readTree(requestContent);
         UserDBAccess_impl userDBAccess_impl = new UserDBAccess_impl();
         CardsDBAccess_impl cardDBAccess_impl = new CardsDBAccess_impl();
+        HttpResponse_Impl response = null;
+        JsonNode node = null;
+        ObjectMapper mapper = new ObjectMapper();
+        String requestContent = req.getHttpsContent();
+        if(requestContent != null && requestContent.equals("")) { node = mapper.readTree(requestContent); }
+
+        switch(req.getMethod())
+        {
+            case "POST" -> response = handlePOST(node, userDBAccess_impl, cardDBAccess_impl);
+            case "GET" -> System.out.println("GET");
+            case "PUT" -> System.out.println("PUT");
+            case "DELETE" -> System.out.println("DELETE");
+        }
         String res;
 
         switch(req.getPath())
@@ -64,14 +70,17 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 else response = new HttpResponse_Impl(200, "package created");
             }
             case "/transactions/packages" -> {
+
                 String user = req.getAuthorizedUser();
                 boolean success = cardDBAccess_impl.acquirePackage(user);
                 if(success) { response = new HttpResponse_Impl(200, "package bought"); }
                 else { response = new HttpResponse_Impl(400, "not enough money"); }
             }
-            case "/Cards_impl" -> {
-                System.out.println("Cards_impl");
-                //response = new HttpResponse_Impl(200, "");
+            case "/cards" -> {
+                String user = req.getAuthorizedUser();
+                boolean success = cardDBAccess_impl.showCards(user);
+                if(success) { response = new HttpResponse_Impl(200, "cards shown"); }
+                else { response = new HttpResponse_Impl(400, "no cards shown"); }
             }
             case "/deck" -> {
                 System.out.println("deck");
@@ -90,10 +99,48 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 //response = new HttpResponse_Impl(200);
             }
         }
-
         return response;
     }
 
+    @Override
+    public HttpResponse_Impl handlePOST(JsonNode node, UserDBAccess_impl userDBAccess_impl, CardsDBAccess_impl cardsDBAccess_impl) throws SQLException {
+        String res;
+        switch(req.getPath())
+        {
+            case "/users" -> {
+                String user = node.get("Username").getValueAsText();
+                String psw = node.get("Password").getValueAsText();
+                res = userDBAccess_impl.addUser(user, psw);
+
+                if(res != null) { return new HttpResponse_Impl(200, "user created"); }
+                else { return new HttpResponse_Impl(400, "user not created"); }
+            }
+            case "/sessions" -> {
+                String user = node.get("Username").getValueAsText();
+                String psw = node.get("Password").getValueAsText();
+                res = userDBAccess_impl.getUser(user);
+                if(res.contains(psw)) { return new HttpResponse_Impl(200, "user logged in"); }
+                else { return new HttpResponse_Impl(400, "user not logged in, wrong password or username"); }
+            }
+            case "/packages" -> {
+                ArrayList<String> oneCard = new ArrayList<>(3);
+                boolean success = traverse(node, oneCard);
+                this.count++;
+                if(!success) { return new HttpResponse_Impl(500, "package not submitted"); }
+                else return new HttpResponse_Impl(200, "package created");
+            }
+            case "/transactions/packages" -> {
+
+                String user = req.getAuthorizedUser();
+                boolean success = cardsDBAccess_impl.acquirePackage(user);
+                if(success) { return new HttpResponse_Impl(200, "package bought"); }
+                else { return new HttpResponse_Impl(400, "not enough money"); }
+            }
+        }
+        return null;
+    }
+
+    @Override
     public boolean traverse(JsonNode root, ArrayList<String> oneCard)
     {
         if(root.isObject()){

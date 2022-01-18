@@ -27,15 +27,14 @@ public class UserDBAccess_impl implements UserDBAccess
         res.close();
         sta.close();
         conn.close();
-
         return userData.toString();
     }
 
     @Override
     public String addUser(String username, String psw)
     {
-        Connection conn = databaseConn_impl.getInstance().getConn();
         try {
+            Connection conn = databaseConn_impl.getInstance().getConn();
             PreparedStatement sta = conn.prepareStatement(
                     "INSERT INTO users (token, username, password, coins) VALUES (?, ?, ?, ?);"
                     , Statement.RETURN_GENERATED_KEYS);
@@ -48,19 +47,17 @@ public class UserDBAccess_impl implements UserDBAccess
 
             // couldn't get executed
             if (affectedRows == 0) {
+                sta.close();
+                conn.close();
                 return null;
             }
-
             sta.close();
             conn.close();
-
             return this.getUser(username);
-
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
         }
-        //return null;
     }
 
 }

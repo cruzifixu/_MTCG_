@@ -2,6 +2,8 @@ package game.rest_api;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Locale;
+
 public class HttpResponse_Impl implements HttpResponse
 {
     @Getter
@@ -41,7 +43,7 @@ public class HttpResponse_Impl implements HttpResponse
     public HttpResponse_Impl(int code, String message) {
         this();
         this.statusCode = code;
-        this.body = message;
+        this.body = message.toUpperCase(Locale.ROOT);
         this.content_length = this.body.length();
 
         switch(code)
@@ -59,7 +61,7 @@ public class HttpResponse_Impl implements HttpResponse
         bob.append("Host: ").append(host).append("\r\n");
         bob.append("Content-type: ").append(content_type).append("\r\n");
         bob.append("Content-length: ").append(content_length).append("\r\n");
-        bob.append("\r\n"+this.body); // body missing
+        bob.append("\r\n"+this.body+"\n\n"); // body missing
 
         System.out.println(bob);
         this.setRESPONSE(bob.toString());

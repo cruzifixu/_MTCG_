@@ -9,6 +9,7 @@ public class RestServer_impl implements Runnable, RestServer
 {
     private static ServerSocket listener = null;
     private final int port;
+    static final int MAX_T = 20; // max thread
 
     public RestServer_impl(int port)
     {
@@ -43,6 +44,8 @@ public class RestServer_impl implements Runnable, RestServer
                         pw.flush();
                     } catch (IOException | SQLException e) {
                         e.printStackTrace();
+                    } catch (Throwable throwable) {
+                        throwable.printStackTrace();
                     }
                 });
                 thread.start();
