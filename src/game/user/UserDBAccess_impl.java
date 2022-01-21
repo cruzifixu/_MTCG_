@@ -1,6 +1,7 @@
 package game.user;
 
 import game.db.databaseConn_impl;
+import game.deck.DeckDBAccess_impl;
 import org.codehaus.jackson.JsonNode;
 
 import java.sql.*;
@@ -52,6 +53,10 @@ public class UserDBAccess_impl implements UserDBAccess
                 conn.close();
                 return null;
             }
+
+            DeckDBAccess_impl deckDBAccess_impl = new DeckDBAccess_impl();
+            deckDBAccess_impl.addUserDeck(node.get("Username").getValueAsText());
+
             sta.close();
             conn.close();
             return this.getUser(node.get("Username").getValueAsText());
