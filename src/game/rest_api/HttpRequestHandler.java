@@ -10,6 +10,7 @@ import java.util.ArrayList;
 
 public interface HttpRequestHandler {
     HttpResponse handle() throws IOException, SQLException;
-    HttpResponse_Impl handlePOST(JsonNode node, UserDBAccess_impl userDBAccess_impl, CardsDBAccess_impl cardsDBAccess_impl);
+    HttpResponse_Impl handlePOST(JsonNode node, UserDBAccess_impl userDBAccess_impl, CardsDBAccess_impl cardsDBAccess_impl)  throws SQLException;
+    HttpResponse_Impl handleGET(CardsDBAccess_impl cardsDBAccess_impl);
     boolean traverse(JsonNode root, ArrayList<String> oneCard);
 }

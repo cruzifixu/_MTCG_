@@ -34,54 +34,19 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
         JsonNode node = null;
         ObjectMapper mapper = new ObjectMapper();
         String requestContent = req.getHttpsContent();
-        if(requestContent != null && requestContent.equals("")) { node = mapper.readTree(requestContent); }
+        if(requestContent != null && !requestContent.equals("")) { node = mapper.readTree(requestContent); }
 
         switch(req.getMethod())
         {
             case "POST" -> response = handlePOST(node, userDBAccess_impl, cardDBAccess_impl);
-            case "GET" -> System.out.println("GET");
+            case "GET" -> response = handleGET(cardDBAccess_impl);
             case "PUT" -> System.out.println("PUT");
             case "DELETE" -> System.out.println("DELETE");
         }
-        String res;
 
+        /*
         switch(req.getPath())
         {
-            case "/users" -> {
-                String user = node.get("Username").getValueAsText();
-                String psw = node.get("Password").getValueAsText();
-                res = userDBAccess_impl.addUser(user, psw);
-
-                if(res != null) { response = new HttpResponse_Impl(200, "user created"); }
-                else { response = new HttpResponse_Impl(400, "user not created"); }
-            }
-            case "/sessions" -> {
-                String user = node.get("Username").getValueAsText();
-                String psw = node.get("Password").getValueAsText();
-                res = userDBAccess_impl.getUser(user);
-                if(res.contains(psw)) { response = new HttpResponse_Impl(200, "user logged in"); }
-                else { response = new HttpResponse_Impl(400, "user not logged in, wrong password or username"); }
-            }
-            case "/packages" -> {
-                ArrayList<String> oneCard = new ArrayList<>(3);
-                boolean success = traverse(node, oneCard);
-                this.count++;
-                if(!success) { response = new HttpResponse_Impl(500, "package not submitted"); }
-                else response = new HttpResponse_Impl(200, "package created");
-            }
-            case "/transactions/packages" -> {
-
-                String user = req.getAuthorizedUser();
-                boolean success = cardDBAccess_impl.acquirePackage(user);
-                if(success) { response = new HttpResponse_Impl(200, "package bought"); }
-                else { response = new HttpResponse_Impl(400, "not enough money"); }
-            }
-            case "/cards" -> {
-                String user = req.getAuthorizedUser();
-                boolean success = cardDBAccess_impl.showCards(user);
-                if(success) { response = new HttpResponse_Impl(200, "cards shown"); }
-                else { response = new HttpResponse_Impl(400, "no cards shown"); }
-            }
             case "/deck" -> {
                 System.out.println("deck");
                 //response = new HttpResponse_Impl(200);
@@ -99,44 +64,74 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 //response = new HttpResponse_Impl(200);
             }
         }
+
+         */
         return response;
     }
 
     @Override
     public HttpResponse_Impl handlePOST(JsonNode node, UserDBAccess_impl userDBAccess_impl, CardsDBAccess_impl cardsDBAccess_impl) throws SQLException {
         String res;
+
         switch(req.getPath())
         {
             case "/users" -> {
-                String user = node.get("Username").getValueAsText();
-                String psw = node.get("Password").getValueAsText();
-                res = userDBAccess_impl.addUser(user, psw);
-
-                if(res != null) { return new HttpResponse_Impl(200, "user created"); }
+                // --- getting username and password of node to add to db
+                // --- if user was created it will get user from db again to check
+                // if not null - success
+                if(userDBAccess_impl.addUser(node.get("Username").getValueAsText(), node.get("Password").getValueAsText()) != null)
+                { return new HttpResponse_Impl(200, "user created"); }
                 else { return new HttpResponse_Impl(400, "user not created"); }
             }
             case "/sessions" -> {
-                String user = node.get("Username").getValueAsText();
-                String psw = node.get("Password").getValueAsText();
-                res = userDBAccess_impl.getUser(user);
-                if(res.contains(psw)) { return new HttpResponse_Impl(200, "user logged in"); }
+                // --- getting user from db
+                res = userDBAccess_impl.getUser(node.get("Username").getValueAsText());
+                // check if password matches entered password
+                if(res.contains(node.get("Password").getValueAsText())) { return new HttpResponse_Impl(200, "user logged in"); }
                 else { return new HttpResponse_Impl(400, "user not logged in, wrong password or username"); }
             }
             case "/packages" -> {
                 ArrayList<String> oneCard = new ArrayList<>(3);
-                boolean success = traverse(node, oneCard);
-                this.count++;
-                if(!success) { return new HttpResponse_Impl(500, "package not submitted"); }
-                else return new HttpResponse_Impl(200, "package created");
+                // --- if adding packages was a success true
+                if(!traverse(node, oneCard)) { return new HttpResponse_Impl(500, "package not submitted"); }
+                else {
+                    this.count++; // --- count packages
+                    return new HttpResponse_Impl(200, "package created");
+                }
             }
             case "/transactions/packages" -> {
-
-                String user = req.getAuthorizedUser();
-                boolean success = cardsDBAccess_impl.acquirePackage(user);
-                if(success) { return new HttpResponse_Impl(200, "package bought"); }
+                // --- check for if user is authorized first before they can aquire packages
+                // true if authorized
+                if(cardsDBAccess_impl.acquirePackage(req.getAuthorizedUser()))
+                { return new HttpResponse_Impl(200, "package bought"); }
                 else { return new HttpResponse_Impl(400, "not enough money"); }
             }
         }
+        return null;
+    }
+
+    @Override
+    public HttpResponse_Impl handleGET(CardsDBAccess_impl cardDBAccess_impl)
+    {
+        switch(req.getPath())
+        {
+            case "/cards" -> {
+                // --- check if user is authorized
+                String authUser = req.getAuthorizedUser();
+                // if null or empty = unauthorized to get cards
+                if(authUser == null)
+                { return new HttpResponse_Impl(401, "not authorized"); }
+                // --- get cards from db
+                String res = cardDBAccess_impl.showCards(authUser);
+                // if result is not null - user owns cards - prints cards
+                if(res != null) { return new HttpResponse_Impl(200, res); }
+                else { return new HttpResponse_Impl(400, "no cards shown"); }
+            }
+            case "/deck" -> {
+
+            }
+        }
+
         return null;
     }
 
@@ -160,9 +155,7 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
             }
         } else { // single value field
             if(oneCard.size() < 15)
-            {
-                oneCard.add(root.getValueAsText());
-            }
+            { oneCard.add(root.getValueAsText()); }
             if(oneCard.size() == 15)
             {
                 CardsDBAccess_impl cardDBAccess_impl = new CardsDBAccess_impl();

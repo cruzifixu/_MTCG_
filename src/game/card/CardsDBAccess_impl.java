@@ -215,7 +215,8 @@ public class CardsDBAccess_impl implements CardsDBAccess
         return true;
     }
 
-    public boolean showCards(String user)
+    @Override
+    public String showCards(String user)
     {
         try
         {
@@ -226,15 +227,21 @@ public class CardsDBAccess_impl implements CardsDBAccess
           );
           stmt.setString(1, user);
           ResultSet res = stmt.executeQuery();
-          if(res.next())
-          {
 
+          StringBuilder userData = new StringBuilder();
+          while(res.next())
+          {
+              userData.append(res.getString(2)).append("\n").append(res.getString(3)).append("\n");
           }
 
+          res.close();
+          stmt.close();
+          conn.close();
+          return userData.toString();
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        return true;
+        return null;
     }
 }

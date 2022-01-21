@@ -7,5 +7,6 @@ public interface CardsDBAccess
     boolean createPackage(ArrayList<String> oneCard, int count);
     boolean checkBalance(String username);
     boolean acquirePackage(String username);
+    String showCards(String user);
 
 }
