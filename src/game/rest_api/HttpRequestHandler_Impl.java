@@ -88,8 +88,8 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
             case "/users" -> {
                 // --- getting username and password of node to add to db
                 // --- if user was created it will get user from db again to check
-                // if not null - success
-                if(getUserDBAccess().addUser(node) != null)
+                // if not null and true- success
+                if(getUserDBAccess().addUser(node) != null && getDeckDBAccess().addUserDeck(node))
                 { return new HttpResponse_Impl(200, "user created"); }
                 else { return new HttpResponse_Impl(400, "user not created"); }
             }
@@ -151,6 +151,11 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
             }
         }
 
+        return null;
+    }
+
+    @Override
+    public HttpResponse_Impl handlePUT() {
         return null;
     }
 

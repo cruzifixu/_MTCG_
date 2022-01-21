@@ -11,6 +11,7 @@ public class CardsDBAccess_impl implements CardsDBAccess
     {
         try {
             Connection conn = databaseConn_impl.getInstance().getConn();
+            // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
                     "INSERT INTO packages (ownedby) VALUES (?);"
                     , Statement.RETURN_GENERATED_KEYS);
@@ -27,20 +28,36 @@ public class CardsDBAccess_impl implements CardsDBAccess
 
             if(generatedKeys.next())
             {
+                String category_type, element_type;
                 int count = 0, cardField = 0;
                 while(count < 5)
                 {
                     count++;
+
+                    if(oneCard.get(cardField+1).contains("Spell"))
+                    { category_type = "Spell"; }
+                    else { category_type = "Monster"; }
+
+                    if(oneCard.get(cardField+1).contains("Fire"))
+                    { element_type = "Fire"; }
+                    else if(oneCard.get(cardField+1).contains("Water"))
+                    { element_type = "Water"; }
+                    else
+                    { element_type = "Regular"; }
+
+                    // ----- PREPARED STATEMENT ----- //
                     PreparedStatement sta = conn.prepareStatement(
-                            "INSERT INTO Cards (id, name, damage, package_num) VALUES (?, ?, ?, ?);"
+                            "INSERT INTO Cards (id, name, category_type, element_type, damage, package_num) VALUES (?, ?, ?, ?, ?);"
                     );
-                    sta.setString(1, oneCard.get(cardField));
-                    sta.setString(2, oneCard.get(cardField+1));
-                    sta.setDouble(3, Double.parseDouble(oneCard.get(cardField+2)));
-                    sta.setInt(4, generatedKeys.getInt(1));
+                    sta.setString(1, oneCard.get(cardField));                           // set id
+                    sta.setString(2, oneCard.get(cardField+1));                         // set card name
+                    sta.setString(3, category_type);                                    // set category type
+                    sta.setString(4, element_type);                                     // set element type
+                    sta.setDouble(5, Double.parseDouble(oneCard.get(cardField+2)));     // set damage
+                    sta.setInt(6, generatedKeys.getInt(1));                   // set package num
 
                     int affectedRows = sta.executeUpdate();
-                    cardField += 3;
+                    cardField += 3; // --- get next set of cards
                     // couldn't get executed
                     if (affectedRows == 0) {
                         PreparedStatement stmt2 = conn.prepareStatement(
@@ -55,6 +72,10 @@ public class CardsDBAccess_impl implements CardsDBAccess
                         conn.close();
                         return false;
                     }
+
+                    //Spellcard spellcard = new Spellcard(oneCard.get(cardField+1), oneCard.get(cardField+2),
+                                //element_type,  Integer.parseInt(oneCard.get(cardField+2)), "", generatedKeys.getInt(1));
+
                     sta.close();
                 }
             }
@@ -72,10 +93,11 @@ public class CardsDBAccess_impl implements CardsDBAccess
     {
         try {
             Connection conn = databaseConn_impl.getInstance().getConn();
+            // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
                     "SELECT coins FROM users WHERE username = ?;"
             );
-            stmt.setString(1, username);
+            stmt.setString(1, username);    // set username
             ResultSet res = stmt.executeQuery();
             if(res.next())
             {
@@ -104,6 +126,7 @@ public class CardsDBAccess_impl implements CardsDBAccess
         try
         {
             Connection conn = databaseConn_impl.getInstance().getConn();
+            // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
                     "SELECT package_num FROM packages WHERE ownedby = ?;"
             );

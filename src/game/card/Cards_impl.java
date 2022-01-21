@@ -5,9 +5,16 @@ import lombok.Getter;
 public class Cards_impl implements Cards
 {
     @Getter
+    protected String id;
+    @Getter
+    protected String card_name;
+    @Getter
+    protected String element_type;
+    @Getter
     protected int damage;
     @Getter
-    protected String ElementType;
+    protected String owner;
     @Getter
-    protected String name;
+    protected int package_num;
+
 }

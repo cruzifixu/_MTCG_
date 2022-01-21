@@ -54,9 +54,6 @@ public class UserDBAccess_impl implements UserDBAccess
                 return null;
             }
 
-            DeckDBAccess_impl deckDBAccess_impl = new DeckDBAccess_impl();
-            deckDBAccess_impl.addUserDeck(node.get("Username").getValueAsText());
-
             sta.close();
             conn.close();
             return this.getUser(node.get("Username").getValueAsText());
