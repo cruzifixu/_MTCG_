@@ -79,15 +79,16 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 // --- getting username and password of node to add to db
                 // --- if user was created it will get user from db again to check
                 // if not null - success
-                if(userDBAccess_impl.addUser(node.get("Username").getValueAsText(), node.get("Password").getValueAsText()) != null)
+                if(userDBAccess_impl.addUser(node) != null)
                 { return new HttpResponse_Impl(200, "user created"); }
                 else { return new HttpResponse_Impl(400, "user not created"); }
             }
             case "/sessions" -> {
                 // --- getting user from db
-                res = userDBAccess_impl.getUser(node.get("Username").getValueAsText());
+                res = userDBAccess_impl.loginUser(node);
                 // check if password matches entered password
-                if(res.contains(node.get("Password").getValueAsText())) { return new HttpResponse_Impl(200, "user logged in"); }
+                System.out.println(res);
+                if(res != null && res != "") { return new HttpResponse_Impl(200, "user logged in"); }
                 else { return new HttpResponse_Impl(400, "user not logged in, wrong password or username"); }
             }
             case "/packages" -> {

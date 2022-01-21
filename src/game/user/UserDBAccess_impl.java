@@ -1,6 +1,7 @@
 package game.user;
 
 import game.db.databaseConn_impl;
+import org.codehaus.jackson.JsonNode;
 
 import java.sql.*;
 
@@ -31,7 +32,7 @@ public class UserDBAccess_impl implements UserDBAccess
     }
 
     @Override
-    public String addUser(String username, String psw)
+    public String addUser(JsonNode node)
     {
         try {
             Connection conn = databaseConn_impl.getInstance().getConn();
@@ -39,8 +40,8 @@ public class UserDBAccess_impl implements UserDBAccess
                     "INSERT INTO users (token, username, password, coins) VALUES (?, ?, ?, ?);"
                     , Statement.RETURN_GENERATED_KEYS);
             sta.setString(1, " ");
-            sta.setString(2, username);
-            sta.setString(3, psw);
+            sta.setString(2, node.get("Username").getValueAsText());
+            sta.setString(3, node.get("Password").getValueAsText());
             sta.setInt(4, 20);
 
             int affectedRows = sta.executeUpdate();
@@ -53,11 +54,35 @@ public class UserDBAccess_impl implements UserDBAccess
             }
             sta.close();
             conn.close();
-            return this.getUser(username);
+            return this.getUser(node.get("Username").getValueAsText());
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
         }
+    }
+
+    @Override
+    public String loginUser(JsonNode node) throws SQLException {
+        Connection conn = databaseConn_impl.getInstance().getConn();
+        PreparedStatement sta = conn.prepareStatement(
+                "SELECT * FROM users WHERE username = ? AND password = ?;"
+        );
+        sta.setString(1, node.get("Username").getValueAsText());
+        sta.setString(2, node.get("Password").getValueAsText());
+        ResultSet res = sta.executeQuery();
+        StringBuilder userData = new StringBuilder();
+
+        // get userdata results
+        if(res.next()) {
+            userData.append(res.getString(2)).append("\n").append(res.getString(3)).append("\n")
+                    .append(res.getString(4)).append("\n");
+        }
+
+        // close everything before returning data
+        res.close();
+        sta.close();
+        conn.close();
+        return userData.toString();
     }
 
 }

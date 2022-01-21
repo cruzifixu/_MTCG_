@@ -61,7 +61,7 @@ public class HttpResponse_Impl implements HttpResponse
         bob.append("Host: ").append(host).append("\r\n");
         bob.append("Content-type: ").append(content_type).append("\r\n");
         bob.append("Content-length: ").append(content_length).append("\r\n");
-        bob.append("\r\n"+this.body+"\n\n"); // body missing
+        bob.append("\r\n"+this.body+"\n\n");
 
         System.out.println(bob);
         this.setRESPONSE(bob.toString());
