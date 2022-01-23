@@ -1,6 +1,6 @@
 package game.trading;
 
-import game.db.databaseConn_impl;
+import game.db.DatabaseConn_impl;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,7 +13,7 @@ public class TradingDBAccess_impl implements TradingDBAccess
     public String getTrades() {
         try
         {
-            Connection conn = databaseConn_impl.getInstance().getConn();
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
                     "SELECT * FROM trade;"
@@ -45,7 +45,7 @@ public class TradingDBAccess_impl implements TradingDBAccess
     @Override
     public boolean createTrade(Trading_impl trade) {
         try {
-            Connection conn = databaseConn_impl.getInstance().getConn();
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
             PreparedStatement stmt = conn.prepareStatement(
                     "INSERT INTO trade (id, card_to_trade, type, min_damage) VALUES (?, ?, ?, ?);"
             );
@@ -90,7 +90,7 @@ public class TradingDBAccess_impl implements TradingDBAccess
     public String getID(String trading_id) {
         try
         {
-            Connection conn = databaseConn_impl.getInstance().getConn();
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
                     "SELECT card_to_trade FROM trade WHERE id = ?;"
@@ -116,7 +116,7 @@ public class TradingDBAccess_impl implements TradingDBAccess
     @Override
     public boolean deleteTrade(String trading_id, String card_id) {
         try {
-            Connection conn = databaseConn_impl.getInstance().getConn();
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
             PreparedStatement stmt = conn.prepareStatement(
                     "DELETE FROM trade WHERE id = ?;"
             );
@@ -155,7 +155,7 @@ public class TradingDBAccess_impl implements TradingDBAccess
 
     @Override
     public boolean UpdateOwner(String NewOwner, String OldOwner, String id) {
-        Connection conn = databaseConn_impl.getInstance().getConn();
+        Connection conn = DatabaseConn_impl.getInstance().getConn();
         try {
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(

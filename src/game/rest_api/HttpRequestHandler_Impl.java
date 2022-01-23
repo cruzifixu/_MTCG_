@@ -7,7 +7,7 @@ import game.deck.DeckDBAccess_impl;
 import game.trading.TradingDBAccess_impl;
 import game.trading.Trading_impl;
 import game.user.UserDBAccess_impl;
-import game.user.user_impl;
+import game.user.User_impl;
 import lombok.Getter;
 import lombok.Setter;
 import org.codehaus.jackson.JsonNode;
@@ -75,20 +75,20 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
         {
             case "users" -> {
                 // --- getting username and password of node to add to db
-                // --- if user was created it will get user from db again to check
+                // --- if User was created it will get User from db again to check
                 // if not null and true- success
-                user_impl user = new user_impl(node.get("Username").getValueAsText(), node.get("Password").getValueAsText(), 20, "", "", "");
+                User_impl user = new User_impl(node.get("Username").getValueAsText(), node.get("Password").getValueAsText(), 20, "", "", "");
                 if(getUserDBAccess().addUser(user) != null)
-                { return new HttpResponse_Impl(200, "user created"); }
-                else { return new HttpResponse_Impl(400, "user not created"); }
+                { return new HttpResponse_Impl(200, "User created"); }
+                else { return new HttpResponse_Impl(400, "User not created"); }
             }
             case "sessions" -> {
-                // --- getting user from db
+                // --- getting User from db
                 res = getUserDBAccess().loginUser(node);
                 // check if password matches entered password
                 System.out.println(res);
-                if(res != null && !res.equals("")) { return new HttpResponse_Impl(200, "user logged in"); }
-                else { return new HttpResponse_Impl(400, "user not logged in, wrong password or username"); }
+                if(res != null && !res.equals("")) { return new HttpResponse_Impl(200, "User logged in"); }
+                else { return new HttpResponse_Impl(400, "User not logged in, wrong password or username"); }
             }
             case "packages" -> {
                 // --- if adding packages was a success true
@@ -110,7 +110,7 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                     { return new HttpResponse_Impl(403, "trades with yourself forbidden"); }
                             // card to trade                    // trading id
                     String card_id = getTradingDBAccess().getID(req.getSecondLevelPath());
-                                                                            // card from auth user
+                                                                            // card from auth User
                     if(getTradingDBAccess().UpdateOwner(oldOwner, authUser, node.getValueAsText())
                             && getTradingDBAccess().UpdateOwner(authUser, oldOwner, card_id)
                             && getTradingDBAccess().deleteTrade(req.getSecondLevelPath(), card_id)
@@ -146,7 +146,7 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
             case "cards" -> {
                 // --- get cards from db
                 String res = getCardsDBAccess().showCards(authUser);
-                // if result is not null - user owns cards - prints cards
+                // if result is not null - User owns cards - prints cards
                 if(res != null) { return new HttpResponse_Impl(200, res); }
                 else { return new HttpResponse_Impl(400, "no cards shown"); }
             }
@@ -175,13 +175,13 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 { return new HttpResponse_Impl(403, "forbidden"); }
                 String res = getUserDBAccess().getUserWithoutSenInfo(authUser);
                 if(res != null) { return new HttpResponse_Impl(200, res); }
-                else { return new HttpResponse_Impl(404, "user not found"); }
+                else { return new HttpResponse_Impl(404, "User not found"); }
             }
             case "stats" -> {
                 if(authUser == null) { return new HttpResponse_Impl(401, "not authorized"); }
                 String res = getUserDBAccess().getStats(authUser);
                 if(res != null) { return new HttpResponse_Impl(200, res); }
-                else { return new HttpResponse_Impl(404, "user not found"); }
+                else { return new HttpResponse_Impl(404, "User not found"); }
             }
             case "score" -> {
                 String res = getUserDBAccess().getScore();
@@ -213,7 +213,7 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 { return new HttpResponse_Impl(400, "not enough cards to set deck"); }
 
                 for (int i = 0; i < 4; i++) {
-                    // --- if card is not owned by auth user
+                    // --- if card is not owned by auth User
                     if(!getCardsDBAccess().getCard(node.get(i).getValueAsText()).contains(authUser))
                     { return new HttpResponse_Impl(403, "not card owner"); }
 
@@ -226,12 +226,12 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 if(authUser == null) { return new HttpResponse_Impl(401, "not authorized"); }
                 if(!authUser.equals(req.getSecondLevelPath()))
                 { return new HttpResponse_Impl(403, "forbidden"); }
-                // public user_impl(String user, String psw, int coins, String nickname, String bio, String image)
-                user_impl user = new user_impl(authUser, "", 0,
+                // public User_impl(String User, String psw, int coins, String nickname, String bio, String image)
+                User_impl user = new User_impl(authUser, "", 0,
                         node.get("Name").getValueAsText(), node.get("Bio").getTextValue(), node.get("Image").getTextValue());
                 success = getUserDBAccess().EditUserData(user);
-                if(success) { return new HttpResponse_Impl(200, "user data updated"); }
-                else { return new HttpResponse_Impl(400, "user data not updated"); }
+                if(success) { return new HttpResponse_Impl(200, "User data updated"); }
+                else { return new HttpResponse_Impl(400, "User data not updated"); }
             }
         }
 

@@ -3,11 +3,11 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.DriverManager;
 
-public class databaseConn_impl implements databaseConn
+public class DatabaseConn_impl implements DatabaseConn
 {
     // ---------- LAZY INITIALIZATION ----------//
     /////////////////// THE ONLY INSTANCE TO USE ///////////////////
-    public static databaseConn_impl instance = null;
+    public static DatabaseConn_impl instance = null;
 
     // URL, User to conenct to db
     private static String dbUrl = "jdbc:postgresql://localhost:5432/swe1user";
@@ -15,12 +15,12 @@ public class databaseConn_impl implements databaseConn
     private static String psw = "swe1pw";
 
     // PRIVATE Default-Constructor
-    private databaseConn_impl() {}
+    private DatabaseConn_impl() {}
 
-    public static databaseConn_impl getInstance()
+    public static DatabaseConn_impl getInstance()
     {
         // ensure only one instance exists
-        if(instance == null) instance = new databaseConn_impl();
+        if(instance == null) instance = new DatabaseConn_impl();
         return instance;
     }
 

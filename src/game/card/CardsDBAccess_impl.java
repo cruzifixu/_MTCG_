@@ -1,8 +1,7 @@
 package game.card;
 
-import game.db.databaseConn_impl;
+import game.db.DatabaseConn_impl;
 import java.sql.*;
-import java.util.ArrayList;
 
 public class CardsDBAccess_impl implements CardsDBAccess
 {
@@ -10,7 +9,7 @@ public class CardsDBAccess_impl implements CardsDBAccess
     public int createPackage()
     {
         try {
-            Connection conn = databaseConn_impl.getInstance().getConn();
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
                     "INSERT INTO packages (ownedby) VALUES (?);", Statement.RETURN_GENERATED_KEYS);
@@ -42,7 +41,7 @@ public class CardsDBAccess_impl implements CardsDBAccess
 
     @Override
     public boolean addCardToPackage(Cards_impl card) throws SQLException {
-        Connection conn = databaseConn_impl.getInstance().getConn();
+        Connection conn = DatabaseConn_impl.getInstance().getConn();
         // ----- PREPARED STATEMENT ----- //
         PreparedStatement sta = conn.prepareStatement(
                 "INSERT INTO cards (id, name,element_type, damage, package_num) VALUES (?, ?, ?, ?, ?);"
@@ -77,7 +76,7 @@ public class CardsDBAccess_impl implements CardsDBAccess
     public boolean checkBalance(String username)
     {
         try {
-            Connection conn = databaseConn_impl.getInstance().getConn();
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
                     "SELECT coins FROM users WHERE username = ?;"
@@ -110,7 +109,7 @@ public class CardsDBAccess_impl implements CardsDBAccess
     {
         try
         {
-            Connection conn = databaseConn_impl.getInstance().getConn();
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
                     "SELECT package_num FROM packages WHERE ownedby = ?;"
@@ -228,7 +227,7 @@ public class CardsDBAccess_impl implements CardsDBAccess
     {
         try
         {
-          Connection conn = databaseConn_impl.getInstance().getConn();
+          Connection conn = DatabaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
           PreparedStatement stmt = conn.prepareStatement(
                   "SELECT * FROM cards WHERE ownedby = ?;"
@@ -263,7 +262,7 @@ public class CardsDBAccess_impl implements CardsDBAccess
     public String getCard(String ID) {
         try
         {
-            Connection conn = databaseConn_impl.getInstance().getConn();
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
                     "SELECT * FROM cards WHERE id = ?;"
@@ -298,7 +297,7 @@ public class CardsDBAccess_impl implements CardsDBAccess
     public String getOwner(String ID) {
         try
         {
-            Connection conn = databaseConn_impl.getInstance().getConn();
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
                     "SELECT ownedby FROM cards WHERE id = ?;"

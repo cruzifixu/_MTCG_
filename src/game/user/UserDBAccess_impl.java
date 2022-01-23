@@ -1,7 +1,6 @@
 package game.user;
 
-import game.db.databaseConn_impl;
-import game.deck.DeckDBAccess_impl;
+import game.db.DatabaseConn_impl;
 import org.codehaus.jackson.JsonNode;
 
 import java.sql.*;
@@ -12,7 +11,7 @@ public class UserDBAccess_impl implements UserDBAccess
     @Override
     public String getUser(String user)  {
         try {
-            Connection conn = databaseConn_impl.getInstance().getConn();
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
             PreparedStatement sta = conn.prepareStatement(
                     "SELECT * FROM users WHERE username = ?;"
             );
@@ -42,7 +41,7 @@ public class UserDBAccess_impl implements UserDBAccess
     @Override
     public String getUserWithoutSenInfo(String user) {
         try {
-            Connection conn = databaseConn_impl.getInstance().getConn();
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
             PreparedStatement sta = conn.prepareStatement(
                     "SELECT id, username, coins, nickname, bio, image FROM users WHERE username = ?;"
             );
@@ -70,8 +69,8 @@ public class UserDBAccess_impl implements UserDBAccess
     }
 
     @Override
-    public boolean EditUserData(user_impl user) throws SQLException {
-        Connection conn = databaseConn_impl.getInstance().getConn();
+    public boolean EditUserData(User_impl user) throws SQLException {
+        Connection conn = DatabaseConn_impl.getInstance().getConn();
         // ----- PREPARED STATEMENT ----- //
         PreparedStatement stmt = conn.prepareStatement(
                 "UPDATE users SET nickname = ?, bio = ?, image = ? WHERE username = ?;"
@@ -93,10 +92,10 @@ public class UserDBAccess_impl implements UserDBAccess
     }
 
     @Override
-    public String addUser(user_impl user)
+    public String addUser(User_impl user)
     {
         try {
-            Connection conn = databaseConn_impl.getInstance().getConn();
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
             PreparedStatement sta = conn.prepareStatement(
                     "INSERT INTO users (token, username, password, coins, won, lost) VALUES (?, ?, ?, ?, ?, ?);"
                     , Statement.RETURN_GENERATED_KEYS);
@@ -126,7 +125,7 @@ public class UserDBAccess_impl implements UserDBAccess
     @Override
     public String loginUser(JsonNode node) {
        try {
-           Connection conn = databaseConn_impl.getInstance().getConn();
+           Connection conn = DatabaseConn_impl.getInstance().getConn();
            PreparedStatement sta = conn.prepareStatement(
                    "SELECT * FROM users WHERE username = ? AND password = ?;"
            );
@@ -157,7 +156,7 @@ public class UserDBAccess_impl implements UserDBAccess
     @Override
     public String getStats(String user) {
         try {
-            Connection conn = databaseConn_impl.getInstance().getConn();
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
             PreparedStatement sta = conn.prepareStatement(
                     "SELECT won, lost, elo FROM users WHERE username = ?;"
             );
@@ -189,7 +188,7 @@ public class UserDBAccess_impl implements UserDBAccess
     @Override
     public String getScore() {
         try {
-            Connection conn = databaseConn_impl.getInstance().getConn();
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
             PreparedStatement sta = conn.prepareStatement(
                     "SELECT username, elo FROM users;"
             );

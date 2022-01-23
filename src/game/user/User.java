@@ -1,5 +1,5 @@
 package game.user;
 
 
-public interface user {
+public interface User {
 }

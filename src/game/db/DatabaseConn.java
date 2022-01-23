@@ -1,7 +1,7 @@
 package game.db;
 import java.sql.Connection;
 
-public interface databaseConn
+public interface DatabaseConn
 {
     Connection getConn();
 }

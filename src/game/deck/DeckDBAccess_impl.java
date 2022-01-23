@@ -1,9 +1,7 @@
 package game.deck;
 
-import game.card.Cards_impl;
-import game.db.databaseConn_impl;
-import game.user.user_impl;
-import org.codehaus.jackson.JsonNode;
+import game.db.DatabaseConn_impl;
+import game.user.User_impl;
 
 import java.sql.*;
 
@@ -11,9 +9,9 @@ public class DeckDBAccess_impl implements DeckDBAccess
 {
 
     @Override
-    public boolean addUserDeck(user_impl user) {
+    public boolean addUserDeck(User_impl user) {
         try {
-            Connection conn = databaseConn_impl.getInstance().getConn();
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
             int count = 1;
 
             while(count < 5)
@@ -48,7 +46,7 @@ public class DeckDBAccess_impl implements DeckDBAccess
     public String getUserDeck(String username, String format) {
         try
         {
-            Connection conn = databaseConn_impl.getInstance().getConn();
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
                     "SELECT * FROM cards WHERE ownedby = ? AND in_deck = ?;"
@@ -96,7 +94,7 @@ public class DeckDBAccess_impl implements DeckDBAccess
 
     @Override
     public boolean setUserDeck(String id) throws SQLException {
-        Connection conn = databaseConn_impl.getInstance().getConn();
+        Connection conn = DatabaseConn_impl.getInstance().getConn();
         // ----- PREPARED STATEMENT ----- //
         PreparedStatement stmt = conn.prepareStatement(
                 "UPDATE cards SET in_deck = ? WHERE id = ?;"
