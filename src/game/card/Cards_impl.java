@@ -11,7 +11,7 @@ public class Cards_impl implements Cards
     @Getter
     protected String element_type;
     @Getter
-    protected int damage;
+    protected double damage;
     @Getter
     protected String owner;
     @Getter

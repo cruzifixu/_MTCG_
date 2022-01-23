@@ -2,7 +2,7 @@ package game.card;
 
 public class Monstercard extends Cards_impl
 {
-    Monstercard(String id, String name, String element_type, int damage, String owner, int package_num)
+    public Monstercard(String id, String name, String element_type, double damage, String owner, int package_num)
     {
         this.id = id;
         this.card_name = name;

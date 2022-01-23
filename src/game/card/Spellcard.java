@@ -2,7 +2,7 @@ package game.card;
 
 public class Spellcard extends Cards_impl
 {
-    Spellcard(String id, String name, String element_type, int damage, String owner, int package_num)
+    public Spellcard(String id, String name, String element_type, double damage, String owner, int package_num)
     {
         this.id = id;
         this.card_name = name;

@@ -7,84 +7,70 @@ import java.util.ArrayList;
 public class CardsDBAccess_impl implements CardsDBAccess
 {
     @Override
-    public boolean createPackage(ArrayList<String> oneCard, int package_num)
+    public int createPackage()
     {
         try {
             Connection conn = databaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO packages (ownedby) VALUES (?);"
-                    , Statement.RETURN_GENERATED_KEYS);
+                    "INSERT INTO packages (ownedby) VALUES (?);", Statement.RETURN_GENERATED_KEYS);
             stmt.setString(1, "");
             int rowsAffected = stmt.executeUpdate();
 
             if(rowsAffected == 0) {
                 stmt.close();
                 conn.close();
-                return false;
+                return 0;
             }
+
+            int num = 0;
 
             ResultSet generatedKeys = stmt.getGeneratedKeys();
-
             if(generatedKeys.next())
-            {
-                String category_type, element_type;
-                int count = 0, cardField = 0;
-                while(count < 5)
-                {
-                    count++;
+            { num = generatedKeys.getInt(1); }
 
-                    if(oneCard.get(cardField+1).contains("Spell"))
-                    { category_type = "Spell"; }
-                    else { category_type = "Monster"; }
-
-                    if(oneCard.get(cardField+1).contains("Fire"))
-                    { element_type = "Fire"; }
-                    else if(oneCard.get(cardField+1).contains("Water"))
-                    { element_type = "Water"; }
-                    else
-                    { element_type = "Regular"; }
-
-                    // ----- PREPARED STATEMENT ----- //
-                    PreparedStatement sta = conn.prepareStatement(
-                            "INSERT INTO Cards (id, name, category_type, element_type, damage, package_num) VALUES (?, ?, ?, ?, ?);"
-                    );
-                    sta.setString(1, oneCard.get(cardField));                           // set id
-                    sta.setString(2, oneCard.get(cardField+1));                         // set card name
-                    sta.setString(3, category_type);                                    // set category type
-                    sta.setString(4, element_type);                                     // set element type
-                    sta.setDouble(5, Double.parseDouble(oneCard.get(cardField+2)));     // set damage
-                    sta.setInt(6, generatedKeys.getInt(1));                   // set package num
-
-                    int affectedRows = sta.executeUpdate();
-                    cardField += 3; // --- get next set of cards
-                    // couldn't get executed
-                    if (affectedRows == 0) {
-                        PreparedStatement stmt2 = conn.prepareStatement(
-                                "DELETE FROM packages WHERE package_num = ?;"
-                        );
-                        stmt2.setInt(1, generatedKeys.getInt(1));
-                        stmt2.executeUpdate();
-
-                        generatedKeys.close();
-                        stmt2.close();
-                        sta.close();
-                        conn.close();
-                        return false;
-                    }
-
-                    //Spellcard spellcard = new Spellcard(oneCard.get(cardField+1), oneCard.get(cardField+2),
-                                //element_type,  Integer.parseInt(oneCard.get(cardField+2)), "", generatedKeys.getInt(1));
-
-                    sta.close();
-                }
-            }
             generatedKeys.close();
             stmt.close();
             conn.close();
+
+            return num;
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return 0;
+    }
+
+    @Override
+    public boolean addCardToPackage(Cards_impl card) throws SQLException {
+        Connection conn = databaseConn_impl.getInstance().getConn();
+        // ----- PREPARED STATEMENT ----- //
+        PreparedStatement sta = conn.prepareStatement(
+                "INSERT INTO cards (id, name, category_type, element_type, damage, package_num) VALUES (?, ?, ?, ?, ?, ?);"
+        );
+        sta.setString(1, card.getId());                     // set id
+        sta.setString(2, card.getCard_name());              // set card name
+        sta.setString(3, card.getClass().toString());       // set category type
+        sta.setString(4, card.getElement_type());           // set element type
+        sta.setDouble(5, card.getDamage());                 // set damage
+        sta.setInt(6, card.getPackage_num());               // set package num
+
+        int affectedRows = sta.executeUpdate();
+        // couldn't get executed
+        if (affectedRows == 0) {
+            PreparedStatement stmt2 = conn.prepareStatement(
+                    "DELETE FROM packages WHERE package_num = ?;"
+            );
+            stmt2.setInt(1, card.getPackage_num());
+            stmt2.executeUpdate();
+
+            stmt2.close();
+            sta.close();
+            conn.close();
+            return false;
+        }
+
+        sta.close();
+        conn.close();
         return true;
     }
 
@@ -267,4 +253,42 @@ public class CardsDBAccess_impl implements CardsDBAccess
 
         return null;
     }
+
+    @Override
+    public String getCard(String ID) {
+        try
+        {
+            Connection conn = databaseConn_impl.getInstance().getConn();
+            // ----- PREPARED STATEMENT ----- //
+            PreparedStatement stmt = conn.prepareStatement(
+                    "SELECT * FROM cards WHERE id = ?;"
+            );
+            stmt.setString(1, ID);
+            ResultSet res = stmt.executeQuery();
+
+            StringBuilder userData = new StringBuilder();
+            if(res.next())
+            {
+                userData.append("{\"id\":"+ "\"" +res.getString(1)+ "\",")
+                        .append("\"card_name\":" + "\"" + res.getString(2)+ "\",")
+                        .append("\"element_type\":" + "\"" + res.getString(3)+ "\",")
+                        .append("\"category_type\":" + "\"" + res.getString(4)+ "\",")
+                        .append("\"damage\":"+ "\"" + res.getInt(5)+ "\",")
+                        .append("\"username\":" + "\"" + res.getString(6)+ "\",")
+                        .append("\"package_num\":" + "\"" + res.getInt(7)+ "\"}\n")
+                ;
+            }
+
+            res.close();
+            stmt.close();
+            conn.close();
+            return userData.toString();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+
 }

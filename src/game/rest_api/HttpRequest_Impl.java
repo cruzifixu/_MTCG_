@@ -15,6 +15,8 @@ public class HttpRequest_Impl implements HttpRequest
     @Getter
     private  String method;
     private String path;
+    @Getter
+    private String secondLevelPath;
     private String host;
     private String content;
     private BufferedReader reader;
@@ -62,7 +64,7 @@ public class HttpRequest_Impl implements HttpRequest
     @Override
     public int readHttpHeader() throws IOException {
         String line;
-        String[] m;
+        String[] m, l;
         int ContentLength = 0, count = 0;
 
         while((line = reader.readLine()) != null)
@@ -70,8 +72,10 @@ public class HttpRequest_Impl implements HttpRequest
             if(count++ == 0)
             {
                 m = line.split(" ");
+                l = m[1].split("/");
                 this.method = m[0];
-                this.path = m[1];
+                this.path = l[1];
+                if(l.length > 2) { this.secondLevelPath = l[2]; }
             }
             if(count++ == 3)
             {

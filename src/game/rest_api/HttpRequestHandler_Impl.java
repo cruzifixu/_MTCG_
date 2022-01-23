@@ -1,8 +1,11 @@
 package game.rest_api;
 
 import game.card.CardsDBAccess_impl;
+import game.card.Monstercard;
+import game.card.Spellcard;
 import game.deck.DeckDBAccess_impl;
 import game.user.UserDBAccess_impl;
+import game.user.user_impl;
 import lombok.Getter;
 import lombok.Setter;
 import org.codehaus.jackson.JsonNode;
@@ -30,9 +33,6 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
     @Getter
     DeckDBAccess_impl DeckDBAccess = new DeckDBAccess_impl();
 
-
-
-
     public HttpRequestHandler_Impl(HttpRequest_Impl req)
     {
         this.req = req;
@@ -50,32 +50,9 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
         {
             case "POST" -> response = handlePOST(node);
             case "GET" -> response = handleGET();
-            case "PUT" -> System.out.println("PUT");
+            case "PUT" -> response =  handlePUT(node);
             case "DELETE" -> System.out.println("DELETE");
         }
-
-        /*
-        switch(req.getPath())
-        {
-            case "/deck" -> {
-                System.out.println("deck");
-                //response = new HttpResponse_Impl(200);
-            }
-            case "/tradings" -> {
-                System.out.println("tradings");
-                //response = new HttpResponse_Impl(200);
-            }
-            case "/stats" -> {
-                System.out.println("stats");
-                //response = new HttpResponse_Impl(200);
-            }
-            case "/score" -> {
-                System.out.println("score");
-                //response = new HttpResponse_Impl(200);
-            }
-        }
-
-         */
         return response;
     }
 
@@ -85,32 +62,29 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
 
         switch(req.getPath())
         {
-            case "/users" -> {
+            case "users" -> {
                 // --- getting username and password of node to add to db
                 // --- if user was created it will get user from db again to check
                 // if not null and true- success
-                if(getUserDBAccess().addUser(node) != null && getDeckDBAccess().addUserDeck(node))
+                user_impl user = new user_impl(node.get("Username").getValueAsText(), node.get("Password").getValueAsText(), 20, "", "", "");
+                if(getUserDBAccess().addUser(user) != null && getDeckDBAccess().addUserDeck(user))
                 { return new HttpResponse_Impl(200, "user created"); }
                 else { return new HttpResponse_Impl(400, "user not created"); }
             }
-            case "/sessions" -> {
+            case "sessions" -> {
                 // --- getting user from db
                 res = getUserDBAccess().loginUser(node);
                 // check if password matches entered password
                 System.out.println(res);
-                if(res != null && res != "") { return new HttpResponse_Impl(200, "user logged in"); }
+                if(res != null && !res.equals("")) { return new HttpResponse_Impl(200, "user logged in"); }
                 else { return new HttpResponse_Impl(400, "user not logged in, wrong password or username"); }
             }
-            case "/packages" -> {
-                ArrayList<String> oneCard = new ArrayList<>(3);
+            case "packages" -> {
                 // --- if adding packages was a success true
-                if(!traverse(node, oneCard)) { return new HttpResponse_Impl(500, "package not submitted"); }
-                else {
-                    this.count++; // --- count packages
-                    return new HttpResponse_Impl(200, "package created");
-                }
+                if(!getCardInfo(node)) { return new HttpResponse_Impl(500, "package not submitted"); }
+                else { return new HttpResponse_Impl(200, "package created"); }
             }
-            case "/transactions/packages" -> {
+            case "transactions/packages" -> {
                 // --- check for if user is authorized first before they can aquire packages
                 // true if authorized
                 if(getCardsDBAccess().acquirePackage(req.getAuthorizedUser()))
@@ -124,9 +98,10 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
     @Override
     public HttpResponse_Impl handleGET()
     {
+        System.out.println(req.getPath());
         switch(req.getPath())
         {
-            case "/cards" -> {
+            case "cards" -> {
                 // --- check if user is authorized
                 String authUser = req.getAuthorizedUser();
                 // if null or empty = unauthorized to get cards
@@ -138,16 +113,49 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 if(res != null) { return new HttpResponse_Impl(200, res); }
                 else { return new HttpResponse_Impl(400, "no cards shown"); }
             }
-            case "/deck" -> {
+            case "deck" -> {
                 // --- check if user is authorized
                 String authUser = req.getAuthorizedUser();
                 // if null or empty = unauthorized to get deck
                 if(authUser == null)
                 { return new HttpResponse_Impl(401, "not authorized"); }
                 // --- get deck from db
-                String res = getDeckDBAccess().getUserDeck(authUser);
-                if(res.contains("NULL")) { return new HttpResponse_Impl(200, res); }
+                String res = getDeckDBAccess().getUserDeck(authUser, "json");
+                if(!res.contains("NULL")) { return new HttpResponse_Impl(200, res); }
                 else { return new HttpResponse_Impl(400, "deck unconfigured"); }
+            }
+            case "deck?format=plain" -> {
+                // --- check if user is authorized
+                String authUser = req.getAuthorizedUser();
+                // if null or empty = unauthorized to get deck
+                if(authUser == null)
+                { return new HttpResponse_Impl(401, "not authorized"); }
+                // --- get deck from db
+                String res = getDeckDBAccess().getUserDeck(authUser, "plain");
+                if(!res.contains("NULL")) { return new HttpResponse_Impl(200, res); }
+                else { return new HttpResponse_Impl(400, "deck unconfigured"); }
+            }
+            case "users" -> {
+                String authUser = req.getAuthorizedUser();
+                if(authUser == null)
+                { return new HttpResponse_Impl(401, "not authorized"); }
+                if(!authUser.equals(req.getSecondLevelPath()))
+                { return new HttpResponse_Impl(403, "forbidden"); }
+                String res = getUserDBAccess().getUserWithoutSenInfo(authUser);
+                if(res != null) { return new HttpResponse_Impl(200, res); }
+                else { return new HttpResponse_Impl(404, "user not found"); }
+            }
+            case "stats" -> {
+                String authUser = req.getAuthorizedUser();
+                if(authUser == null) { return new HttpResponse_Impl(401, "not authorized"); }
+                String res = getUserDBAccess().getStats(authUser);
+                if(res != null) { return new HttpResponse_Impl(200, res); }
+                else { return new HttpResponse_Impl(404, "user not found"); }
+            }
+            case "score" -> {
+                String res = getUserDBAccess().getScore();
+                if(res != null) { return new HttpResponse_Impl(200, res); }
+                else  { return new HttpResponse_Impl(404, "no users data found"); }
             }
         }
 
@@ -155,37 +163,83 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
     }
 
     @Override
-    public HttpResponse_Impl handlePUT() {
+    public HttpResponse_Impl handlePUT(JsonNode node) throws SQLException, IOException {
+        boolean success;
+        switch(req.getPath()) {
+            case "deck" -> {
+                String authUser = req.getAuthorizedUser();
+                // if null = not authorized to set deck
+                if (authUser == null) {
+                    return new HttpResponse_Impl(401, "not authorized");
+                }
+
+                System.out.println("size "+node.size());
+
+                if(node.size() < 4)
+                { return new HttpResponse_Impl(400, "not enough cards to set deck"); }
+
+                for (int i = 1; i < 5; i++) {
+                    // --- if card isnt owned by auth user
+                    if(!getCardsDBAccess().getCard(node.get(i-1).getValueAsText()).contains(authUser))
+                    { return new HttpResponse_Impl(403, "not card owner"); }
+                    ObjectMapper mapper = new ObjectMapper();
+
+                    JsonNode oneCard = mapper.readTree(getCardsDBAccess().getCard(node.get(i-1).getValueAsText()));
+
+                    if (!getDeckDBAccess().setUserDeck(oneCard, i))
+                    { return new HttpResponse_Impl(400, "deck was not set"); }
+                }
+                return new HttpResponse_Impl(200, "deck set");
+            }
+            case "users" -> {
+                String authUser = req.getAuthorizedUser();
+                if(authUser == null) { return new HttpResponse_Impl(401, "not authorized"); }
+                if(!authUser.equals(req.getSecondLevelPath()))
+                { return new HttpResponse_Impl(403, "forbidden"); }
+                // public user_impl(String user, String psw, int coins, String nickname, String bio, String image)
+                user_impl user = new user_impl(authUser, "", 0,
+                        node.get("Name").getValueAsText(), node.get("Bio").getTextValue(), node.get("Image").getTextValue());
+                success = getUserDBAccess().EditUserData(user);
+                if(success) { return new HttpResponse_Impl(200, "user data updated"); }
+                else { return new HttpResponse_Impl(400, "user data not updated"); }
+            }
+        }
+
         return null;
     }
 
     @Override
-    public boolean traverse(JsonNode root, ArrayList<String> oneCard)
-    {
-        if(root.isObject()){
-            Iterator<String> fieldNames = root.getFieldNames();
-            // iterate through all field names
-            while(fieldNames.hasNext()) {
-                String fieldName = fieldNames.next();
-                JsonNode fieldValue = root.get(fieldName);
-                traverse(fieldValue, oneCard);
-            }
-        } else if(root.isArray()){
-            ArrayNode arrayNode = (ArrayNode) root;
-            // iterate through array
-            for(int i = 0; i < arrayNode.size(); i++) {
-                JsonNode arrayElement = arrayNode.get(i);
-                traverse(arrayElement, oneCard);
-            }
-        } else { // single value field
-            if(oneCard.size() < 15)
-            { oneCard.add(root.getValueAsText()); }
-            if(oneCard.size() == 15)
+    public boolean getCardInfo(JsonNode node) throws SQLException {
+
+        String category_type, element_type;
+        Spellcard spellcard;
+        Monstercard monstercard;
+
+        int package_num = getCardsDBAccess().createPackage();
+        for(int i = 0; i < 5; i++)
+        {
+            if(node.get(i).get("Name").getValueAsText().contains("Fire"))
+            { element_type = "Fire"; }
+            else if(node.get(i).get("Name").getValueAsText().contains("Water"))
+            { element_type = "Water"; }
+            else
+            { element_type = "Regular"; }
+            if(node.get(i).get("Name").getValueAsText().contains("Spell"))
+            { category_type = "Spell"; }
+            else
+            { category_type = "Monster"; }
+
+            if(category_type.equals("Spell"))
             {
-                CardsDBAccess_impl cardDBAccess_impl = new CardsDBAccess_impl();
-                boolean success = cardDBAccess_impl.createPackage(oneCard, this.count);
-                if(!success) return false;
-                oneCard.clear();
+                spellcard = new Spellcard(node.get(i).get("Id").getValueAsText(), node.get(i).get("Name").getValueAsText(),
+                        element_type, Double.parseDouble(node.get(i).get("Damage").getValueAsText()), "", package_num);
+                getCardsDBAccess().addCardToPackage(spellcard);
+            }
+            else
+            {
+                monstercard = new Monstercard(node.get(i).get("Id").getValueAsText(), node.get(i).get("Name").getValueAsText(),
+                        element_type, Double.parseDouble(node.get(i).get("Damage").getValueAsText()), "", package_num);
+                getCardsDBAccess().addCardToPackage(monstercard);
             }
         }
         return true;
