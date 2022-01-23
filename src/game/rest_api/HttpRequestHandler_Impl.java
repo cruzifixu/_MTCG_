@@ -53,7 +53,9 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
         if(!(req.getMethod().equals("POST") && req.getPath().equals("users"))
                 &&
                 !(req.getMethod().equals("POST") && req.getPath().equals("sessions")))
-        { authUser = req.getAuthorizedUser(); }
+        {
+            authUser = req.getAuthorizedUser();
+        }
 
         switch(req.getMethod())
         {
@@ -104,7 +106,6 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 {
                     String oldOwner = getCardsDBAccess().getOwner(getTradingDBAccess().getID(req.getSecondLevelPath()));
                     // --- trading with self not allowed
-                    System.out.println("old " + oldOwner + "new "+ authUser);
                     if(oldOwner.equals(authUser))
                     { return new HttpResponse_Impl(403, "trades with yourself forbidden"); }
                             // card to trade                    // trading id
@@ -127,6 +128,11 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                     { return new HttpResponse_Impl(200, "trade created"); }
                     else { return new HttpResponse_Impl(400, "no trade created"); }
                 }
+            }
+            case "battles" -> {
+                if(authUser == null)
+                { return new HttpResponse_Impl(401, "not authorized"); }
+
             }
         }
         return null;
