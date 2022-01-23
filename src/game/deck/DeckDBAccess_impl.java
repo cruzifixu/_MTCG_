@@ -1,5 +1,6 @@
 package game.deck;
 
+import game.card.Cards_impl;
 import game.db.databaseConn_impl;
 import game.user.user_impl;
 import org.codehaus.jackson.JsonNode;
@@ -19,9 +20,9 @@ public class DeckDBAccess_impl implements DeckDBAccess
             {
                 // ----- PREPARED STATEMENT ----- //
                 PreparedStatement sta = conn.prepareStatement(
-                        "INSERT INTO deck (owner, card_num) VALUES (?, ?);"
+                        "UPDATE cards SET in_deck = ? WHERE id = ?;"
                         );
-                sta.setString(1, user.getUsername());
+                sta.setBoolean(1, true);
                 sta.setInt(2, count);
 
                 int affectedRows = sta.executeUpdate();
@@ -50,9 +51,10 @@ public class DeckDBAccess_impl implements DeckDBAccess
             Connection conn = databaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
-                    "SELECT * FROM deck WHERE owner = ?;"
+                    "SELECT * FROM cards WHERE ownedby = ? AND in_deck = ?;"
             );
             stmt.setString(1, username);
+            stmt.setBoolean(2, true);
             ResultSet res = stmt.executeQuery();
 
             StringBuilder userData = new StringBuilder();
@@ -60,24 +62,22 @@ public class DeckDBAccess_impl implements DeckDBAccess
             {
                 if(format.equals("json"))
                 {
-                    userData.append("{\"card_num\":"+ "\"" +res.getInt(1)+ "\",")
-                            .append("\"username\":" + "\"" + res.getString(2)+ "\",")
-                            .append("\"id\":" + "\"" + res.getString(3)+ "\",")
-                            .append("\"card_name\":" + "\"" + res.getString(4)+ "\",")
-                            .append("\"element_type\":"+ "\"" + res.getString(5)+ "\",")
-                            .append("\"damage\":" + "\"" + res.getInt(6)+ "\",")
-                            .append("\"package_num\":" + "\"" + res.getInt(7)+ "\"}\n")
+                    userData.append("{\"id\":"+ "\"" +res.getString(1)+ "\",")
+                            .append("\"card_name\":" + "\"" + res.getString(2)+ "\",")
+                            .append("\"element_type\":" + "\"" + res.getString(3)+ "\",")
+                            .append("\"damage\":" + "\"" + res.getString(4)+ "\",")
+                            .append("\"username\":"+ "\"" + res.getString(5)+ "\",")
+                            .append("\"package_num\":" + "\"" + res.getInt(6)+ "\"}\n")
                     ;
                 }
                 else
                 {
-                    userData.append(res.getInt(1) + " ")
+                    userData.append(res.getString(1) + " ")
                             .append(res.getString(2)+ " ")
                             .append(res.getString(3)+ " ")
-                            .append(res.getString(4)+ " ")
+                            .append(res.getInt(4)+ " ")
                             .append(res.getString(5)+ " ")
-                            .append(res.getInt(6)+ " ")
-                            .append(res.getInt(7)+ "\n")
+                            .append(res.getInt(6)+ "\n")
                     ;
                 }
 
@@ -95,24 +95,23 @@ public class DeckDBAccess_impl implements DeckDBAccess
     }
 
     @Override
-    public boolean setUserDeck(JsonNode node, int num) throws SQLException {
+    public boolean setUserDeck(String id) throws SQLException {
         Connection conn = databaseConn_impl.getInstance().getConn();
         // ----- PREPARED STATEMENT ----- //
         PreparedStatement stmt = conn.prepareStatement(
-                "UPDATE deck SET id = ?, name = ?, element_type = ?, damage = ?, package_num = ? WHERE owner = ? AND card_num = ?;"
+                "UPDATE cards SET in_deck = ? WHERE id = ?;"
         );
-
-        stmt.setString(1, node.get("id").getValueAsText());
-        stmt.setString(2, node.get("card_name").getValueAsText());
-        stmt.setString(3, node.get("element_type").getValueAsText());
-        stmt.setInt(4, Integer.parseInt(node.get("damage").getValueAsText()));
-        stmt.setInt(5, Integer.parseInt(node.get("package_num").getValueAsText()));
-        stmt.setString(6, node.get("username").getValueAsText());
-        stmt.setInt(7, num);
+        stmt.setBoolean(1, true);
+        stmt.setString(2, id);
 
         int affectedRows = stmt.executeUpdate();
 
-        if(affectedRows == 0) { return false; }
+        if(affectedRows == 0)
+        {
+            stmt.close();
+            conn.close();
+            return false;
+        }
 
         stmt.close();
         conn.close();

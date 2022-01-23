@@ -45,14 +45,13 @@ public class CardsDBAccess_impl implements CardsDBAccess
         Connection conn = databaseConn_impl.getInstance().getConn();
         // ----- PREPARED STATEMENT ----- //
         PreparedStatement sta = conn.prepareStatement(
-                "INSERT INTO cards (id, name, category_type, element_type, damage, package_num) VALUES (?, ?, ?, ?, ?, ?);"
+                "INSERT INTO cards (id, name,element_type, damage, package_num) VALUES (?, ?, ?, ?, ?);"
         );
         sta.setString(1, card.getId());                     // set id
         sta.setString(2, card.getCard_name());              // set card name
-        sta.setString(3, card.getClass().toString());       // set category type
-        sta.setString(4, card.getElement_type());           // set element type
-        sta.setDouble(5, card.getDamage());                 // set damage
-        sta.setInt(6, card.getPackage_num());               // set package num
+        sta.setString(3, card.getElement_type());           // set element type
+        sta.setDouble(4, card.getDamage());                 // set damage
+        sta.setInt(5, card.getPackage_num());               // set package num
 
         int affectedRows = sta.executeUpdate();
         // couldn't get executed
@@ -240,7 +239,13 @@ public class CardsDBAccess_impl implements CardsDBAccess
           StringBuilder userData = new StringBuilder();
           while(res.next())
           {
-              userData.append(res.getString(2)).append("\n").append(res.getString(3)).append("\n");
+              userData.append("{\"id\":"+ "\"" +res.getString(1)+ "\",")
+                      .append("\"card_name\":" + "\"" + res.getString(2)+ "\",")
+                      .append("\"element_type\":" + "\"" + res.getString(3)+ "\",")
+                      .append("\"damage\":"+ "\"" + res.getInt(4)+ "\",")
+                      .append("\"username\":" + "\"" + res.getString(5)+ "\",")
+                      .append("\"package_num\":" + "\"" + res.getInt(6)+ "\"}\n")
+              ;
           }
 
           res.close();
@@ -272,13 +277,38 @@ public class CardsDBAccess_impl implements CardsDBAccess
                 userData.append("{\"id\":"+ "\"" +res.getString(1)+ "\",")
                         .append("\"card_name\":" + "\"" + res.getString(2)+ "\",")
                         .append("\"element_type\":" + "\"" + res.getString(3)+ "\",")
-                        .append("\"category_type\":" + "\"" + res.getString(4)+ "\",")
-                        .append("\"damage\":"+ "\"" + res.getInt(5)+ "\",")
-                        .append("\"username\":" + "\"" + res.getString(6)+ "\",")
-                        .append("\"package_num\":" + "\"" + res.getInt(7)+ "\"}\n")
+                        .append("\"damage\":"+ "\"" + res.getInt(4)+ "\",")
+                        .append("\"username\":" + "\"" + res.getString(5)+ "\",")
+                        .append("\"package_num\":" + "\"" + res.getInt(6)+ "\"}\n")
                 ;
             }
 
+            res.close();
+            stmt.close();
+            conn.close();
+            return userData.toString();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    @Override
+    public String getOwner(String ID) {
+        try
+        {
+            Connection conn = databaseConn_impl.getInstance().getConn();
+            // ----- PREPARED STATEMENT ----- //
+            PreparedStatement stmt = conn.prepareStatement(
+                    "SELECT ownedby FROM cards WHERE id = ?;"
+            );
+            stmt.setString(1, ID);
+            ResultSet res = stmt.executeQuery();
+
+            StringBuilder userData = new StringBuilder();
+            if(res.next())
+            { userData.append(res.getString(1)); }
             res.close();
             stmt.close();
             conn.close();

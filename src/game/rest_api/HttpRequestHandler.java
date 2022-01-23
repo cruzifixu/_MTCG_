@@ -13,5 +13,6 @@ public interface HttpRequestHandler {
     HttpResponse_Impl handlePOST(JsonNode node)  throws SQLException;
     HttpResponse_Impl handleGET();
     HttpResponse_Impl handlePUT(JsonNode node) throws SQLException, IOException;
+    HttpResponse_Impl handleDELETE(JsonNode node);
     boolean getCardInfo(JsonNode node) throws SQLException;
 }

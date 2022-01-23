@@ -4,18 +4,17 @@ import game.card.CardsDBAccess_impl;
 import game.card.Monstercard;
 import game.card.Spellcard;
 import game.deck.DeckDBAccess_impl;
+import game.trading.TradingDBAccess_impl;
+import game.trading.Trading_impl;
 import game.user.UserDBAccess_impl;
 import game.user.user_impl;
 import lombok.Getter;
 import lombok.Setter;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.ArrayNode;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Iterator;
 
 
 public class HttpRequestHandler_Impl implements HttpRequestHandler
@@ -24,6 +23,8 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
     private HttpRequest_Impl req;
     @Getter @Setter
     private int count = 1;
+    @Getter
+    private String authUser;
 
     // --- DB ACCESS -- //
     @Getter
@@ -32,6 +33,8 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
     CardsDBAccess_impl CardsDBAccess = new CardsDBAccess_impl();
     @Getter
     DeckDBAccess_impl DeckDBAccess = new DeckDBAccess_impl();
+    @Getter
+    TradingDBAccess_impl TradingDBAccess = new TradingDBAccess_impl();
 
     public HttpRequestHandler_Impl(HttpRequest_Impl req)
     {
@@ -46,12 +49,18 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
         String requestContent = req.getHttpsContent();
         if(requestContent != null && !requestContent.equals("")) { node = mapper.readTree(requestContent); }
 
+        // check auth
+        if(!(req.getMethod().equals("POST") && req.getPath().equals("users"))
+                &&
+                !(req.getMethod().equals("POST") && req.getPath().equals("sessions")))
+        { authUser = req.getAuthorizedUser(); }
+
         switch(req.getMethod())
         {
             case "POST" -> response = handlePOST(node);
             case "GET" -> response = handleGET();
-            case "PUT" -> response =  handlePUT(node);
-            case "DELETE" -> System.out.println("DELETE");
+            case "PUT" -> response = handlePUT(node);
+            case "DELETE" -> response = handleDELETE(node);
         }
         return response;
     }
@@ -67,7 +76,7 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 // --- if user was created it will get user from db again to check
                 // if not null and true- success
                 user_impl user = new user_impl(node.get("Username").getValueAsText(), node.get("Password").getValueAsText(), 20, "", "", "");
-                if(getUserDBAccess().addUser(user) != null && getDeckDBAccess().addUserDeck(user))
+                if(getUserDBAccess().addUser(user) != null)
                 { return new HttpResponse_Impl(200, "user created"); }
                 else { return new HttpResponse_Impl(400, "user not created"); }
             }
@@ -84,12 +93,40 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 if(!getCardInfo(node)) { return new HttpResponse_Impl(500, "package not submitted"); }
                 else { return new HttpResponse_Impl(200, "package created"); }
             }
-            case "transactions/packages" -> {
-                // --- check for if user is authorized first before they can aquire packages
+            case "transactions" -> {
                 // true if authorized
                 if(getCardsDBAccess().acquirePackage(req.getAuthorizedUser()))
                 { return new HttpResponse_Impl(200, "package bought"); }
                 else { return new HttpResponse_Impl(400, "not enough money"); }
+            }
+            case "tradings" -> {
+                if(req.getSecondLevelPath() != null)
+                {
+                    String oldOwner = getCardsDBAccess().getOwner(getTradingDBAccess().getID(req.getSecondLevelPath()));
+                    // --- trading with self not allowed
+                    System.out.println("old " + oldOwner + "new "+ authUser);
+                    if(oldOwner.equals(authUser))
+                    { return new HttpResponse_Impl(403, "trades with yourself forbidden"); }
+                            // card to trade                    // trading id
+                    String card_id = getTradingDBAccess().getID(req.getSecondLevelPath());
+                                                                            // card from auth user
+                    if(getTradingDBAccess().UpdateOwner(oldOwner, authUser, node.getValueAsText())
+                            && getTradingDBAccess().UpdateOwner(authUser, oldOwner, card_id)
+                            && getTradingDBAccess().deleteTrade(req.getSecondLevelPath(), card_id)
+                    )
+                    { return new HttpResponse_Impl(200, "trade made"); }
+                    else { return new HttpResponse_Impl(400, "no trades made"); }
+                }
+                else
+                {
+                    // --- new trade
+                    Trading_impl trade = new Trading_impl(node.get("Id").getValueAsText(),
+                            node.get("CardToTrade").getValueAsText(),
+                            node.get("Type").getValueAsText(), node.get("MinimumDamage").getValueAsInt());
+                    if(getTradingDBAccess().createTrade(trade))
+                    { return new HttpResponse_Impl(200, "trade created"); }
+                    else { return new HttpResponse_Impl(400, "no trade created"); }
+                }
             }
         }
         return null;
@@ -98,15 +135,9 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
     @Override
     public HttpResponse_Impl handleGET()
     {
-        System.out.println(req.getPath());
         switch(req.getPath())
         {
             case "cards" -> {
-                // --- check if user is authorized
-                String authUser = req.getAuthorizedUser();
-                // if null or empty = unauthorized to get cards
-                if(authUser == null)
-                { return new HttpResponse_Impl(401, "not authorized"); }
                 // --- get cards from db
                 String res = getCardsDBAccess().showCards(authUser);
                 // if result is not null - user owns cards - prints cards
@@ -114,29 +145,24 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 else { return new HttpResponse_Impl(400, "no cards shown"); }
             }
             case "deck" -> {
-                // --- check if user is authorized
-                String authUser = req.getAuthorizedUser();
                 // if null or empty = unauthorized to get deck
                 if(authUser == null)
                 { return new HttpResponse_Impl(401, "not authorized"); }
                 // --- get deck from db
                 String res = getDeckDBAccess().getUserDeck(authUser, "json");
-                if(!res.contains("NULL")) { return new HttpResponse_Impl(200, res); }
+                if(res != null && !res.equals("")) { return new HttpResponse_Impl(200, res); }
                 else { return new HttpResponse_Impl(400, "deck unconfigured"); }
             }
             case "deck?format=plain" -> {
-                // --- check if user is authorized
-                String authUser = req.getAuthorizedUser();
                 // if null or empty = unauthorized to get deck
                 if(authUser == null)
                 { return new HttpResponse_Impl(401, "not authorized"); }
                 // --- get deck from db
                 String res = getDeckDBAccess().getUserDeck(authUser, "plain");
-                if(!res.contains("NULL")) { return new HttpResponse_Impl(200, res); }
+                if(res != null && !res.equals("")) { return new HttpResponse_Impl(200, res); }
                 else { return new HttpResponse_Impl(400, "deck unconfigured"); }
             }
             case "users" -> {
-                String authUser = req.getAuthorizedUser();
                 if(authUser == null)
                 { return new HttpResponse_Impl(401, "not authorized"); }
                 if(!authUser.equals(req.getSecondLevelPath()))
@@ -146,7 +172,6 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 else { return new HttpResponse_Impl(404, "user not found"); }
             }
             case "stats" -> {
-                String authUser = req.getAuthorizedUser();
                 if(authUser == null) { return new HttpResponse_Impl(401, "not authorized"); }
                 String res = getUserDBAccess().getStats(authUser);
                 if(res != null) { return new HttpResponse_Impl(200, res); }
@@ -156,6 +181,12 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 String res = getUserDBAccess().getScore();
                 if(res != null) { return new HttpResponse_Impl(200, res); }
                 else  { return new HttpResponse_Impl(404, "no users data found"); }
+            }
+            case "tradings" -> {
+                if(authUser == null) { return new HttpResponse_Impl(401, "not authorized"); }
+                String res = getTradingDBAccess().getTrades();
+                if(res != null) { return new HttpResponse_Impl(200, res); }
+                else { return new HttpResponse_Impl(404, "no trades found"); }
             }
         }
 
@@ -167,32 +198,25 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
         boolean success;
         switch(req.getPath()) {
             case "deck" -> {
-                String authUser = req.getAuthorizedUser();
                 // if null = not authorized to set deck
                 if (authUser == null) {
                     return new HttpResponse_Impl(401, "not authorized");
                 }
 
-                System.out.println("size "+node.size());
-
                 if(node.size() < 4)
                 { return new HttpResponse_Impl(400, "not enough cards to set deck"); }
 
-                for (int i = 1; i < 5; i++) {
-                    // --- if card isnt owned by auth user
-                    if(!getCardsDBAccess().getCard(node.get(i-1).getValueAsText()).contains(authUser))
+                for (int i = 0; i < 4; i++) {
+                    // --- if card is not owned by auth user
+                    if(!getCardsDBAccess().getCard(node.get(i).getValueAsText()).contains(authUser))
                     { return new HttpResponse_Impl(403, "not card owner"); }
-                    ObjectMapper mapper = new ObjectMapper();
 
-                    JsonNode oneCard = mapper.readTree(getCardsDBAccess().getCard(node.get(i-1).getValueAsText()));
-
-                    if (!getDeckDBAccess().setUserDeck(oneCard, i))
+                    if (!getDeckDBAccess().setUserDeck(node.get(i).getValueAsText()))
                     { return new HttpResponse_Impl(400, "deck was not set"); }
                 }
                 return new HttpResponse_Impl(200, "deck set");
             }
             case "users" -> {
-                String authUser = req.getAuthorizedUser();
                 if(authUser == null) { return new HttpResponse_Impl(401, "not authorized"); }
                 if(!authUser.equals(req.getSecondLevelPath()))
                 { return new HttpResponse_Impl(403, "forbidden"); }
@@ -207,6 +231,21 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
 
         return null;
     }
+
+    @Override
+    public HttpResponse_Impl handleDELETE(JsonNode node) {
+        switch(req.getPath())
+        {
+            case "tradings" -> {
+                if(authUser == null) { return new HttpResponse_Impl(401, "not authorized"); }
+                if(getTradingDBAccess().deleteTrade(req.getSecondLevelPath(), getTradingDBAccess().getID(req.getSecondLevelPath())))
+                { return new HttpResponse_Impl(200, "trade successfully deleted"); }
+                else { return new HttpResponse_Impl(400, "trade not deleted"); }
+            }
+        }
+        return null;
+    }
+
 
     @Override
     public boolean getCardInfo(JsonNode node) throws SQLException {

@@ -16,5 +16,4 @@ public class Cards_impl implements Cards
     protected String owner;
     @Getter
     protected int package_num;
-
 }

@@ -98,12 +98,14 @@ public class UserDBAccess_impl implements UserDBAccess
         try {
             Connection conn = databaseConn_impl.getInstance().getConn();
             PreparedStatement sta = conn.prepareStatement(
-                    "INSERT INTO users (token, username, password, coins) VALUES (?, ?, ?, ?);"
+                    "INSERT INTO users (token, username, password, coins, won, lost) VALUES (?, ?, ?, ?, ?, ?);"
                     , Statement.RETURN_GENERATED_KEYS);
             sta.setString(1, " ");
             sta.setString(2, user.getUsername());
             sta.setString(3, user.getPassword());
             sta.setInt(4, 20);
+            sta.setInt(5, 0);
+            sta.setInt(6, 0);
 
             int affectedRows = sta.executeUpdate();
 
@@ -154,15 +156,13 @@ public class UserDBAccess_impl implements UserDBAccess
 
     @Override
     public String getStats(String user) {
-        Connection conn = databaseConn_impl.getInstance().getConn();
-        PreparedStatement sta = null;
         try {
-            sta = conn.prepareStatement(
+            Connection conn = databaseConn_impl.getInstance().getConn();
+            PreparedStatement sta = conn.prepareStatement(
                     "SELECT won, lost, elo FROM users WHERE username = ?;"
             );
-            ResultSet res = null;
-
-            res = sta.executeQuery();
+            sta.setString(1, user);
+            ResultSet res = sta.executeQuery();
 
             StringBuilder userData = new StringBuilder();
 
@@ -173,6 +173,7 @@ public class UserDBAccess_impl implements UserDBAccess
                         .append("\", \"elo\":\"").append(res.getString(3)).append("\"}");
             }
 
+            System.out.println("userdata "+ userData);
 
             // close everything before returning data
             res.close();
@@ -198,7 +199,7 @@ public class UserDBAccess_impl implements UserDBAccess
             // get userdata results
             while(res.next()) {
                 userData.append("{\"username\":\"").append(res.getString(1))
-                        .append("\", \"elo\":\"").append(res.getString(2)).append("\"}");
+                        .append("\", \"elo\":\"").append(res.getString(2)).append("\"}\n");
             }
 
             // close everything before returning data

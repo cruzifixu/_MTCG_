@@ -11,4 +11,5 @@ public interface CardsDBAccess
     boolean acquirePackage(String username);
     String showCards(String user);
     String getCard(String ID);
+    String getOwner(String ID);
 }
