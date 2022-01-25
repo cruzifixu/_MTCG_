@@ -1,12 +1,8 @@
 package game.deck;
-
-import game.card.Cards;
 import game.card.Cards_impl;
 import game.card.Monstercard;
 import game.card.Spellcard;
 import game.db.DatabaseConn_impl;
-import game.user.User_impl;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -32,21 +28,21 @@ public class DeckDBAccess_impl implements DeckDBAccess
                 if(format.equals("json"))
                 {
                     userData.append("{\"id\":" + "\"").append(res.getString(1)).append("\",")
-                            .append("\"card_name\":" + "\"" + res.getString(2)+ "\",")
-                            .append("\"element_type\":" + "\"" + res.getString(3)+ "\",")
-                            .append("\"damage\":" + "\"" + res.getString(4)+ "\",")
-                            .append("\"username\":"+ "\"" + res.getString(5)+ "\",")
-                            .append("\"package_num\":" + "\"" + res.getInt(6)+ "\"}\n")
+                            .append("\"card_name\":" + "\"").append(res.getString(2)).append("\",")
+                            .append("\"element_type\":" + "\"").append(res.getString(3)).append("\",")
+                            .append("\"damage\":" + "\"").append(res.getString(4)).append("\",")
+                            .append("\"username\":" + "\"").append(res.getString(5)).append("\",")
+                            .append("\"package_num\":" + "\"").append(res.getInt(6)).append("\"}\n")
                     ;
                 }
                 else
                 {
-                    userData.append(res.getString(1) + " ")
-                            .append(res.getString(2)+ " ")
-                            .append(res.getString(3)+ " ")
-                            .append(res.getInt(4)+ " ")
-                            .append(res.getString(5)+ " ")
-                            .append(res.getInt(6)+ "\n")
+                    userData.append(res.getString(1)).append(" ")
+                            .append(res.getString(2)).append(" ")
+                            .append(res.getString(3)).append(" ")
+                            .append(res.getInt(4)).append(" ")
+                            .append(res.getString(5)).append(" ")
+                            .append(res.getInt(6)).append("\n")
                     ;
                 }
 

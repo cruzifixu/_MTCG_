@@ -6,7 +6,7 @@ import java.time.Instant;
 public class BattleFightLogger
 {
     @Getter
-    private StringBuilder log = new StringBuilder();
+    private final StringBuilder log = new StringBuilder();
     // ---------- LAZY INITIALIZATION ----------//
     /////////////////// THE ONLY INSTANCE TO USE ///////////////////
     public static BattleFightLogger instance = null;
@@ -20,5 +20,5 @@ public class BattleFightLogger
         if(instance == null) instance = new BattleFightLogger();
         return instance;
     }
-    public void newLogEntry(String entry) { this.log.append(Timestamp.from(Instant.now()) + ": " + entry); }
+    public void newLogEntry(String entry) { this.log.append(Timestamp.from(Instant.now())).append(": ").append(entry); }
 }

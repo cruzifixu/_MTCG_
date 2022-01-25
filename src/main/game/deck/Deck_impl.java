@@ -2,8 +2,7 @@ package game.deck;
 
 import lombok.Getter;
 
-public class Deck_impl implements Deck
-{
+public class Deck_impl {
     @Getter
     protected String card_name;
     @Getter

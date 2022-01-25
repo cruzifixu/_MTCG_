@@ -3,7 +3,7 @@ package game.user;
 import lombok.Getter;
 import lombok.Setter;
 
-public class User_impl implements User {
+public class User_impl {
     @Getter @Setter
     String username;
     @Getter @Setter

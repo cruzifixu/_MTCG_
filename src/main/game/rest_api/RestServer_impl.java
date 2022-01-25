@@ -4,8 +4,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class RestServer_impl implements Runnable, RestServer
-{
+public class RestServer_impl implements Runnable {
     private static ServerSocket listener = null;
     private final int port;
 

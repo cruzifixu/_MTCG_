@@ -1,10 +1,6 @@
 package game.user;
-
-import lombok.Getter;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
-
-import java.sql.SQLException;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;

@@ -1,13 +1,7 @@
 package game.rest_api;
 
-import game.card.CardsDBAccess_impl;
-import game.card.Cards_impl;
-import lombok.Getter;
-import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.jupiter.api.Test;
-
-import java.io.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 

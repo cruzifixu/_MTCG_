@@ -238,12 +238,12 @@ public class CardsDBAccess_impl implements CardsDBAccess
           StringBuilder userData = new StringBuilder();
           while(res.next())
           {
-              userData.append("{\"id\":"+ "\"" +res.getString(1)+ "\",")
-                      .append("\"card_name\":" + "\"" + res.getString(2)+ "\",")
-                      .append("\"element_type\":" + "\"" + res.getString(3)+ "\",")
-                      .append("\"damage\":"+ "\"" + res.getInt(4)+ "\",")
-                      .append("\"username\":" + "\"" + res.getString(5)+ "\",")
-                      .append("\"package_num\":" + "\"" + res.getInt(6)+ "\"}\n")
+              userData.append("{\"id\":" + "\"").append(res.getString(1)).append("\",")
+                      .append("\"card_name\":" + "\"").append(res.getString(2)).append("\",")
+                      .append("\"element_type\":" + "\"").append(res.getString(3)).append("\",")
+                      .append("\"damage\":" + "\"").append(res.getInt(4)).append("\",")
+                      .append("\"username\":" + "\"").append(res.getString(5)).append("\",")
+                      .append("\"package_num\":" + "\"").append(res.getInt(6)).append("\"}\n")
               ;
           }
 
@@ -273,12 +273,12 @@ public class CardsDBAccess_impl implements CardsDBAccess
             StringBuilder userData = new StringBuilder();
             if(res.next())
             {
-                userData.append("{\"id\":"+ "\"" +res.getString(1)+ "\",")
-                        .append("\"card_name\":" + "\"" + res.getString(2)+ "\",")
-                        .append("\"element_type\":" + "\"" + res.getString(3)+ "\",")
-                        .append("\"damage\":"+ "\"" + res.getInt(4)+ "\",")
-                        .append("\"username\":" + "\"" + res.getString(5)+ "\",")
-                        .append("\"package_num\":" + "\"" + res.getInt(6)+ "\"}\n")
+                userData.append("{\"id\":" + "\"").append(res.getString(1)).append("\",")
+                        .append("\"card_name\":" + "\"").append(res.getString(2)).append("\",")
+                        .append("\"element_type\":" + "\"").append(res.getString(3)).append("\",")
+                        .append("\"damage\":" + "\"").append(res.getInt(4)).append("\",")
+                        .append("\"username\":" + "\"").append(res.getString(5)).append("\",")
+                        .append("\"package_num\":" + "\"").append(res.getInt(6)).append("\"}\n")
                 ;
             }
 

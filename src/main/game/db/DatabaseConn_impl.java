@@ -10,9 +10,9 @@ public class DatabaseConn_impl implements DatabaseConn
     public static DatabaseConn_impl instance = null;
 
     // URL, User to conenct to db
-    private static String dbUrl = "jdbc:postgresql://localhost:5432/swe1user";
-    private static String user = "swe1user";
-    private static String psw = "swe1pw";
+    private static final String dbUrl = "jdbc:postgresql://localhost:5432/swe1user";
+    private static final String user = "swe1user";
+    private static final String psw = "swe1pw";
 
     // PRIVATE Default-Constructor
     private DatabaseConn_impl() {}

@@ -3,8 +3,7 @@ package game.card;
 import lombok.Getter;
 import lombok.Setter;
 
-public class Cards_impl implements Cards
-{
+public class Cards_impl {
     @Getter
     protected String id;
     @Getter
