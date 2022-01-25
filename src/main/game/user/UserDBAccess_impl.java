@@ -98,7 +98,7 @@ public class UserDBAccess_impl implements UserDBAccess
     }
 
     @Override
-    public String addUser(User_impl user)
+    public boolean addUser(User_impl user)
     {
         try {
             Connection conn = DatabaseConn_impl.getInstance().getConn();
@@ -117,14 +117,14 @@ public class UserDBAccess_impl implements UserDBAccess
             if (affectedRows == 0) {
                 sta.close();
                 conn.close();
-                return null;
+                return false;
             }
 
             sta.close();
             conn.close();
-            return this.getUser(user.getUsername());
+            return true;
         } catch (SQLException e) { e.printStackTrace(); }
-        return null;
+        return false;
     }
 
     @Override

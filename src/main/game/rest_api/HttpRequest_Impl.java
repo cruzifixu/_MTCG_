@@ -1,6 +1,7 @@
 package game.rest_api;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import java.io.*;
 import java.net.Socket;
@@ -20,6 +21,7 @@ public class HttpRequest_Impl implements HttpRequest
     private String host;
     private String content;
     private BufferedReader reader;
+    @Setter
     private String token;
     @Getter
     private String authorizedUser;
@@ -27,6 +29,7 @@ public class HttpRequest_Impl implements HttpRequest
     public HttpRequest_Impl(BufferedReader br) {
         this.reader = br;
     }
+    public HttpRequest_Impl(){}
 
     public String getPath() { return this.path; }
 

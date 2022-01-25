@@ -26,6 +26,7 @@ public class BattleDBAccess_impl implements BattleDBAccess{
             {
                 stmt.close();
                 conn.close();
+                return false;
             }
             stmt.close();
             conn.close();
@@ -55,11 +56,6 @@ public class BattleDBAccess_impl implements BattleDBAccess{
                 if(!(res.getString(2).equals(user)))
                 {
                     userData.append(res.getString(2)); // Username
-                    //userData.append("{\"id\":\"").append(res.getString(1))
-                    //        .append("\", \"username\":\"").append(res.getString(2))
-                    //        .append("\", \"coins\":\"").append(res.getString(3))
-                    //        .append("\", \"nickname\":\"").append(res.getString(4))
-                    //        .append("\", \"status\":\"").append(res.getString(5)).append("\"}");
                     break;
                 }
             }

@@ -45,6 +45,7 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
     {
         this.req = req;
     }
+    public HttpRequestHandler_Impl() {}
 
     @Override
     public HttpResponse_Impl handle() throws IOException, SQLException {
@@ -83,14 +84,13 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 // --- if User was created it will get User from db again to check
                 // if not null and true- success
                 User_impl user = new User_impl(node.get("Username").getValueAsText(), node.get("Password").getValueAsText(), 20, "", "", "");
-                if(getUserDBAccess().addUser(user) != null)
+                if(getUserDBAccess().addUser(user))
                 { return new HttpResponse_Impl(200, "User created"); }
                 else { return new HttpResponse_Impl(400, "User not created"); }
             }
             case "sessions" -> {
                 // --- getting User from db
                 res = getUserDBAccess().loginUser(node);
-                // check if password matches entered password
                 if(res != null && !res.equals("")) { return new HttpResponse_Impl(200, "User logged in"); }
                 else { return new HttpResponse_Impl(400, "User not logged in, wrong password or username"); }
             }
@@ -106,6 +106,8 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 else { return new HttpResponse_Impl(400, "not enough money"); }
             }
             case "tradings" -> {
+                if(authUser == null)
+                { return new HttpResponse_Impl(401, "not authorized"); }
                 if(req.getSecondLevelPath() != null)
                 {
                     String oldOwner = getCardsDBAccess().getOwner(getTradingDBAccess().getID(req.getSecondLevelPath()));
@@ -142,20 +144,24 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                // --- get other user to battle with
                 String otherUser = getBattleDBAccess().checkAllPlayerStatus(authUser);
                 if(otherUser != null && !otherUser.equals(""))
                 {
                     Battle_impl Battle = new Battle_impl(authUser, otherUser,
                             getDeckDBAccess().getUserDeckAsCards(authUser), getDeckDBAccess().getUserDeckAsCards(otherUser),
                             getUserDBAccess().getStatsAsArray(authUser), getUserDBAccess().getStatsAsArray(otherUser));
-                    Battle.BattleFight();
+                    boolean success = Battle.BattleFight();
+                    if(!success) { new HttpResponse_Impl(400,  "battle could not finish"); }
                     BattleFightLogger logger = BattleFightLogger.getInstance();
                     return new HttpResponse_Impl(200,  logger.getLog().toString());
                 }
                 return new HttpResponse_Impl(404, "no battle found");
             }
+            default -> {
+                return null;
+            }
         }
-        return null;
     }
 
     @Override
@@ -181,16 +187,14 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
             }
             case "deck?format=plain" -> {
                 // if null or empty = unauthorized to get deck
-                if(authUser == null)
-                { return new HttpResponse_Impl(401, "not authorized"); }
+                if(authUser == null) { return new HttpResponse_Impl(401, "not authorized"); }
                 // --- get deck from db
                 String res = getDeckDBAccess().getUserDeck(authUser, "plain");
                 if(res != null && !res.equals("")) { return new HttpResponse_Impl(200, res); }
                 else { return new HttpResponse_Impl(400, "deck unconfigured"); }
             }
             case "users" -> {
-                if(authUser == null)
-                { return new HttpResponse_Impl(401, "not authorized"); }
+                if(authUser == null) { return new HttpResponse_Impl(401, "not authorized"); }
                 if(!authUser.equals(req.getSecondLevelPath()))
                 { return new HttpResponse_Impl(403, "forbidden"); }
                 String res = getUserDBAccess().getUserWithoutSenInfo(authUser);
@@ -214,9 +218,10 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 if(res != null) { return new HttpResponse_Impl(200, res); }
                 else { return new HttpResponse_Impl(404, "no trades found"); }
             }
+            default -> {
+                return null;
+            }
         }
-
-        return null;
     }
 
     @Override
@@ -225,9 +230,7 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
         switch(req.getPath()) {
             case "deck" -> {
                 // if null = not authorized to set deck
-                if (authUser == null) {
-                    return new HttpResponse_Impl(401, "not authorized");
-                }
+                if (authUser == null) { return new HttpResponse_Impl(401, "not authorized"); }
 
                 if(node.size() < 4 || node.size() > 4)
                 { return new HttpResponse_Impl(400, "not enough cards to set deck"); }
