@@ -1,5 +1,8 @@
 package game.rest_api;
 
+import game.battle.BattleDBAccess_impl;
+import game.battle.BattleFightLogger;
+import game.battle.Battle_impl;
 import game.card.CardsDBAccess_impl;
 import game.card.Monstercard;
 import game.card.Spellcard;
@@ -35,6 +38,8 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
     DeckDBAccess_impl DeckDBAccess = new DeckDBAccess_impl();
     @Getter
     TradingDBAccess_impl TradingDBAccess = new TradingDBAccess_impl();
+    @Getter
+    BattleDBAccess_impl BattleDBAccess = new BattleDBAccess_impl();
 
     public HttpRequestHandler_Impl(HttpRequest_Impl req)
     {
@@ -86,7 +91,6 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 // --- getting User from db
                 res = getUserDBAccess().loginUser(node);
                 // check if password matches entered password
-                System.out.println(res);
                 if(res != null && !res.equals("")) { return new HttpResponse_Impl(200, "User logged in"); }
                 else { return new HttpResponse_Impl(400, "User not logged in, wrong password or username"); }
             }
@@ -132,7 +136,21 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
             case "battles" -> {
                 if(authUser == null)
                 { return new HttpResponse_Impl(401, "not authorized"); }
-
+                getBattleDBAccess().ChangePlayerStatus(authUser, "ready for battle");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                String otherUser = getBattleDBAccess().checkAllPlayerStatus(authUser);
+                if(otherUser != null)
+                {
+                    Battle_impl Battle = new Battle_impl(authUser, otherUser, getDeckDBAccess().getUserDeckAsCards(authUser), getDeckDBAccess().getUserDeckAsCards(otherUser));
+                    Battle.Battlefight();
+                    BattleFightLogger logger = BattleFightLogger.getInstance();
+                    return new HttpResponse_Impl(200,  logger.getLog().toString());
+                }
+                return new HttpResponse_Impl(404, "no battle found");
             }
         }
         return null;
@@ -209,7 +227,7 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                     return new HttpResponse_Impl(401, "not authorized");
                 }
 
-                if(node.size() < 4)
+                if(node.size() < 4 || node.size() > 4)
                 { return new HttpResponse_Impl(400, "not enough cards to set deck"); }
 
                 for (int i = 0; i < 4; i++) {
@@ -226,7 +244,6 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 if(authUser == null) { return new HttpResponse_Impl(401, "not authorized"); }
                 if(!authUser.equals(req.getSecondLevelPath()))
                 { return new HttpResponse_Impl(403, "forbidden"); }
-                // public User_impl(String User, String psw, int coins, String nickname, String bio, String image)
                 User_impl user = new User_impl(authUser, "", 0,
                         node.get("Name").getValueAsText(), node.get("Bio").getTextValue(), node.get("Image").getTextValue());
                 success = getUserDBAccess().EditUserData(user);

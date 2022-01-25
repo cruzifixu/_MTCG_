@@ -1,6 +1,7 @@
 package game.card;
 
 import lombok.Getter;
+import lombok.Setter;
 
 public class Cards_impl implements Cards
 {
@@ -10,7 +11,7 @@ public class Cards_impl implements Cards
     protected String card_name;
     @Getter
     protected String element_type;
-    @Getter
+    @Getter @Setter
     protected double damage;
     @Getter
     protected String owner;

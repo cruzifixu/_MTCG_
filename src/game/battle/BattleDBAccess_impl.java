@@ -16,7 +16,7 @@ public class BattleDBAccess_impl implements BattleDBAccess{
             Connection conn = DatabaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
-                    "UPDATE users SET bio = ? WHERE username = ?;"
+                    "UPDATE users SET status = ? WHERE username = ?;"
             );
             stmt.setString(1, status);
             stmt.setString(2, user);
@@ -30,21 +30,19 @@ public class BattleDBAccess_impl implements BattleDBAccess{
             stmt.close();
             conn.close();
             return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
 
         return false;
     }
 
     @Override
-    public String checkPlayerStatus(String user) {
+    public String checkOnePlayerStatus(String user) {
         try
         {
             Connection conn = DatabaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
-                    "SELECT bio FROM users WHERE username = ?;"
+                    "SELECT status FROM users WHERE username = ?;"
             );
             stmt.setString(1, user);
             ResultSet res = stmt.executeQuery();
@@ -57,10 +55,44 @@ public class BattleDBAccess_impl implements BattleDBAccess{
             stmt.close();
             conn.close();
             return userData.toString();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
 
+        return null;
+    }
+
+    @Override
+    public String checkAllPlayerStatus(String user)
+    {
+        try
+        {
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
+            // ----- PREPARED STATEMENT ----- //
+            PreparedStatement stmt = conn.prepareStatement(
+                    "SELECT id, username, coins, nickname, status FROM users WHERE status = ?;"
+            );
+            stmt.setString(1, "waiting for battle...");
+            ResultSet res = stmt.executeQuery();
+
+            StringBuilder userData = new StringBuilder();
+            while (res.next())
+            {
+                // --- so user is not added - get first waiting user
+                if(!res.getString(1).equals(user))
+                {
+                    userData.append(res.getString(2)); // Username
+                    //userData.append("{\"id\":\"").append(res.getString(1))
+                    //        .append("\", \"username\":\"").append(res.getString(2))
+                    //        .append("\", \"coins\":\"").append(res.getString(3))
+                    //        .append("\", \"nickname\":\"").append(res.getString(4))
+                    //        .append("\", \"status\":\"").append(res.getString(5)).append("\"}");
+                    break;
+                }
+            }
+            res.close();
+            stmt.close();
+            conn.close();
+            return userData.toString();
+        } catch (SQLException e) { e.printStackTrace(); }
         return null;
     }
 }
