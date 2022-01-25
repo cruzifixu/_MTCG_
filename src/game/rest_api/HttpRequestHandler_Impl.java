@@ -136,17 +136,19 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
             case "battles" -> {
                 if(authUser == null)
                 { return new HttpResponse_Impl(401, "not authorized"); }
-                getBattleDBAccess().ChangePlayerStatus(authUser, "ready for battle");
+                getBattleDBAccess().ChangePlayerStatus(authUser, "ready for battle...");
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 String otherUser = getBattleDBAccess().checkAllPlayerStatus(authUser);
-                if(otherUser != null)
+                if(otherUser != null && !otherUser.equals(""))
                 {
-                    Battle_impl Battle = new Battle_impl(authUser, otherUser, getDeckDBAccess().getUserDeckAsCards(authUser), getDeckDBAccess().getUserDeckAsCards(otherUser));
-                    Battle.Battlefight();
+                    Battle_impl Battle = new Battle_impl(authUser, otherUser,
+                            getDeckDBAccess().getUserDeckAsCards(authUser), getDeckDBAccess().getUserDeckAsCards(otherUser),
+                            getUserDBAccess().getStatsAsArray(authUser), getUserDBAccess().getStatsAsArray(otherUser));
+                    Battle.BattleFight();
                     BattleFightLogger logger = BattleFightLogger.getInstance();
                     return new HttpResponse_Impl(200,  logger.getLog().toString());
                 }
@@ -218,7 +220,7 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
     }
 
     @Override
-    public HttpResponse_Impl handlePUT(JsonNode node) throws SQLException, IOException {
+    public HttpResponse_Impl handlePUT(JsonNode node) throws SQLException {
         boolean success;
         switch(req.getPath()) {
             case "deck" -> {
@@ -250,9 +252,10 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 if(success) { return new HttpResponse_Impl(200, "User data updated"); }
                 else { return new HttpResponse_Impl(400, "User data not updated"); }
             }
+            default -> {
+                return null;
+            }
         }
-
-        return null;
     }
 
     @Override
@@ -265,8 +268,10 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 { return new HttpResponse_Impl(200, "trade successfully deleted"); }
                 else { return new HttpResponse_Impl(400, "trade not deleted"); }
             }
+            default -> {
+                return new HttpResponse_Impl(400, "no such function");
+            }
         }
-        return null;
     }
 
 

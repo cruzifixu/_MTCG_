@@ -4,6 +4,7 @@ import game.db.DatabaseConn_impl;
 import org.codehaus.jackson.JsonNode;
 
 import java.sql.*;
+import java.util.ArrayList;
 
 public class UserDBAccess_impl implements UserDBAccess
 {
@@ -83,7 +84,12 @@ public class UserDBAccess_impl implements UserDBAccess
 
         int affectedRows = stmt.executeUpdate();
 
-        if(affectedRows == 0) { return false; }
+        if(affectedRows == 0)
+        {
+            stmt.close();
+            conn.close();
+            return false;
+        }
 
         stmt.close();
         conn.close();
@@ -97,14 +103,13 @@ public class UserDBAccess_impl implements UserDBAccess
         try {
             Connection conn = DatabaseConn_impl.getInstance().getConn();
             PreparedStatement sta = conn.prepareStatement(
-                    "INSERT INTO users (token, username, password, coins, won, lost) VALUES (?, ?, ?, ?, ?, ?);"
+                    "INSERT INTO users (username, password, coins, won, lost) VALUES (?, ?, ?, ?, ?);"
                     , Statement.RETURN_GENERATED_KEYS);
-            sta.setString(1, " ");
-            sta.setString(2, user.getUsername());
-            sta.setString(3, user.getPassword());
-            sta.setInt(4, 20);
+            sta.setString(1, user.getUsername());
+            sta.setString(2, user.getPassword());
+            sta.setInt(3, 20);
+            sta.setInt(4, 0);
             sta.setInt(5, 0);
-            sta.setInt(6, 0);
 
             int affectedRows = sta.executeUpdate();
 
@@ -172,13 +177,41 @@ public class UserDBAccess_impl implements UserDBAccess
                         .append("\", \"elo\":\"").append(res.getString(3)).append("\"}");
             }
 
-            System.out.println("userdata "+ userData);
-
             // close everything before returning data
             res.close();
             sta.close();
             conn.close();
             return userData.toString();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public ArrayList<Integer> getStatsAsArray(String username) {
+        try {
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
+            PreparedStatement sta = conn.prepareStatement(
+                    "SELECT won, lost, elo FROM users WHERE username = ?;"
+            );
+            sta.setString(1, username);
+            ResultSet res = sta.executeQuery();
+
+            ArrayList<Integer> userData = new ArrayList<>();
+
+            // get userdata results
+            if(res.next()) {
+                userData.add(res.getInt(1));
+                userData.add(res.getInt(2));
+                userData.add(res.getInt(3));
+            }
+
+            // close everything before returning data
+            res.close();
+            sta.close();
+            conn.close();
+            return userData;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -209,5 +242,34 @@ public class UserDBAccess_impl implements UserDBAccess
         } catch(SQLException e) { e.printStackTrace(); }
 
         return null;
+    }
+
+    @Override
+    public boolean UpdateStats(String username, ArrayList<Integer> stats) {
+        try {
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
+            // ----- PREPARED STATEMENT ----- //
+            PreparedStatement stmt = conn.prepareStatement(
+                    "UPDATE users " +
+                            "SET won = ?, " +
+                            "lost = ?, " +
+                            "elo = ? " +
+                            "WHERE username = ?;"
+            );
+            stmt.setInt(1, stats.get(0)); // index 0 - won
+            stmt.setInt(2, stats.get(1)); // index 1 - lost
+            stmt.setInt(3, stats.get(2)); // index 2 - elo
+            stmt.setString(4, username);
+
+            int affectedRows = stmt.executeUpdate();
+
+            if(affectedRows == 0) { return false; }
+
+            stmt.close();
+            conn.close();
+
+            return true;
+        } catch (SQLException e) { e.printStackTrace(); }
+        return false;
     }
 }

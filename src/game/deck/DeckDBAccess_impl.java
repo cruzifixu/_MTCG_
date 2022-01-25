@@ -13,41 +13,6 @@ import java.util.Locale;
 
 public class DeckDBAccess_impl implements DeckDBAccess
 {
-
-    @Override
-    public boolean addUserDeck(User_impl user) {
-        try {
-            Connection conn = DatabaseConn_impl.getInstance().getConn();
-            int count = 1;
-
-            while(count < 5)
-            {
-                // ----- PREPARED STATEMENT ----- //
-                PreparedStatement sta = conn.prepareStatement(
-                        "UPDATE cards SET in_deck = ? WHERE id = ?;"
-                        );
-                sta.setBoolean(1, true);
-                sta.setInt(2, count);
-
-                int affectedRows = sta.executeUpdate();
-
-                // couldn't get executed
-                if (affectedRows == 0) {
-                    sta.close();
-                    conn.close();
-                    return false;
-                }
-                sta.close();
-                count++;
-            }
-            conn.close();
-            return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
     @Override
     public String getUserDeck(String username, String format) {
         try
@@ -66,7 +31,7 @@ public class DeckDBAccess_impl implements DeckDBAccess
             {
                 if(format.equals("json"))
                 {
-                    userData.append("{\"id\":"+ "\"" +res.getString(1)+ "\",")
+                    userData.append("{\"id\":" + "\"").append(res.getString(1)).append("\",")
                             .append("\"card_name\":" + "\"" + res.getString(2)+ "\",")
                             .append("\"element_type\":" + "\"" + res.getString(3)+ "\",")
                             .append("\"damage\":" + "\"" + res.getString(4)+ "\",")

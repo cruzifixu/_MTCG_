@@ -29,16 +29,14 @@ public class TradingDBAccess_impl implements TradingDBAccess
                         .append("\"min_damage\":"+ "\"" + res.getInt(4)+ "\"}\n")
                 ;
             }
-
             res.close();
             stmt.close();
             conn.close();
-            if(!userData.isEmpty()) userData.toString();
+            if(!userData.isEmpty()) return userData.toString();
             else return null;
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return null;
     }
 

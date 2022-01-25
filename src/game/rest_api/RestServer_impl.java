@@ -3,13 +3,11 @@ package game.rest_api;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.sql.SQLException;
 
 public class RestServer_impl implements Runnable, RestServer
 {
     private static ServerSocket listener = null;
     private final int port;
-    static final int MAX_T = 20; // max thread
 
     public RestServer_impl(int port)
     {
@@ -42,10 +40,8 @@ public class RestServer_impl implements Runnable, RestServer
                         pw.print(response.getPayload());
                         pw.print("\r\n");
                         pw.flush();
-                    } catch (IOException | SQLException e) {
+                    } catch (Throwable e) {
                         e.printStackTrace();
-                    } catch (Throwable throwable) {
-                        throwable.printStackTrace();
                     }
                 });
                 thread.start();

@@ -3,6 +3,7 @@ package game.user;
 import org.codehaus.jackson.JsonNode;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 public interface UserDBAccess {
     String getUser(String user) throws SQLException;
@@ -11,5 +12,8 @@ public interface UserDBAccess {
     String addUser(User_impl user);
     String loginUser(JsonNode node) throws SQLException;
     String getStats(String user);
+    ArrayList<Integer> getStatsAsArray(String username);
     String getScore();
+
+    boolean UpdateStats(String username, ArrayList<Integer> stats);
 }

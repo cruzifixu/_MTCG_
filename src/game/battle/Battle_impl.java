@@ -1,6 +1,7 @@
 package game.battle;
 
 import game.card.Cards_impl;
+import game.user.UserDBAccess_impl;
 import lombok.Getter;
 import lombok.Setter;
 import java.util.ArrayList;
@@ -25,31 +26,31 @@ public class Battle_impl implements Battle
     @Getter
     BattleFightLogger logger = BattleFightLogger.getInstance();
 
-    public Battle_impl(String user1, String user2, ArrayList<Cards_impl> user1card, ArrayList<Cards_impl> user2card)
+    public Battle_impl(String user1, String user2, ArrayList<Cards_impl> user1card, ArrayList<Cards_impl> user2card, ArrayList<Integer> user1stats, ArrayList<Integer> user2stats)
     {
         this.user1 = user1;
         this.user2 = user2;
         this.user1card = user1card;
         this.user2card = user2card;
+        this.user1stats = user1stats;
+        this.user2stats = user2stats;
 
         // change status of players -> in battle
         getBattleDBAccessImpl().ChangePlayerStatus(user1, "in battle...");
-        getBattleDBAccessImpl().ChangePlayerStatus(user1, "in battle...");
+        getBattleDBAccessImpl().ChangePlayerStatus(user2, "in battle...");
     }
 
     @Override
-    public boolean Battlefight()
+    public boolean BattleFight()
     {
-        boolean gameON = true;
         int rounds = 0;
-
         do
         {
             logger.newLogEntry("Round " + rounds + "\n");
 
             Random random = new Random();
-            Cards_impl card1 = user1card.get(random.nextInt(5));
-            Cards_impl card2 = user2card.get(random.nextInt(5));
+            Cards_impl card1 = this.user1card.get(random.nextInt(user1card.size()));
+            Cards_impl card2 = this.user2card.get(random.nextInt(user2card.size()));
 
             // check specialties of cards -> rules on moodle
             checkRules(card1, card2);
@@ -66,15 +67,22 @@ public class Battle_impl implements Battle
             checkDamage(card1, card2);
 
             // game ends if one loses all cards
-            // db game lose elo update
-            // db update status back to menu/ idle
-            // empty arraylist
-            // if something went wrong return false -> battle didnt work
-            if(true) // leave game end
-            {  break; }
-            return true;
+            if(user1card.isEmpty() || user2card.isEmpty())
+            {
+                if(user1card.isEmpty()) { logger.newLogEntry(user1 + " won!\n"); }
+                else { logger.newLogEntry(user2 + " won!\n"); }
+                break;
+            }
         } while(rounds++ < 100);
-        return true;
+
+        UserDBAccess_impl UserDBAccess = new UserDBAccess_impl();
+
+        System.out.println("USER 1 "+user1stats);
+        System.out.println("USER 2 "+user2stats);
+        // update stats of users
+        // db update status back to menu/ idle
+        return getBattleDBAccessImpl().ChangePlayerStatus(user1, "idle") && getBattleDBAccessImpl().ChangePlayerStatus(user2, "idle")
+                && UserDBAccess.UpdateStats(user1, user1stats) && UserDBAccess.UpdateStats(user2, user2stats);
     }
 
     @Override
@@ -138,8 +146,8 @@ public class Battle_impl implements Battle
             user1card.remove(card1);
             user1stats.set(1, user1stats.get(1)+1); // ++ lose
             user2stats.set(0, user2stats.get(0)+1); // ++ win
-            user1stats.set(3, (int) calculateELO(user1stats, user2stats, 0)); // lose
-            user2stats.set(3, (int) calculateELO(user2stats, user1stats, 1)); // win
+            user1stats.set(2, (int) calculateELO(user1stats, user2stats, 0)); // lose
+            user2stats.set(2, (int) calculateELO(user2stats, user1stats, 1)); // win
 
             logger.newLogEntry(card1.getCard_name() + " won against " + card2.getCard_name() + "\n");
         }
@@ -149,20 +157,20 @@ public class Battle_impl implements Battle
             // add element at index of card2
             user1card.add(user2card.get(user2card.indexOf(card2)));
             // remove from user2 card
-            user2card.remove(card1);
+            user2card.remove(card2);
             user2stats.set(1, user2stats.get(1)+1); // ++ lose
             user1stats.set(0, user1stats.get(0)+1); // ++ win
-            user1stats.set(3, (int) calculateELO(user1stats, user2stats, 1)); // win
-            user2stats.set(3, (int) calculateELO(user2stats, user1stats, 0)); // lose
+            user1stats.set(2, (int) calculateELO(user1stats, user2stats, 1)); // win
+            user2stats.set(2, (int) calculateELO(user2stats, user1stats, 0)); // lose
 
-            logger.newLogEntry(card2.getCard_name() + " won against" + card1.getCard_name() + "\n");
+            logger.newLogEntry(card2.getCard_name() + " won against " + card1.getCard_name() + "\n");
         }
         else // draw
         {
-            user1stats.set(3, (int) calculateELO(user1stats, user2stats, 0.5)); // win
-            user2stats.set(3, (int) calculateELO(user2stats, user1stats, 0.5)); // lose#
+            user1stats.set(2, (int) calculateELO(user1stats, user2stats, 0.5)); // win
+            user2stats.set(2, (int) calculateELO(user2stats, user1stats, 0.5)); // lose#
 
-            logger.newLogEntry(card1.getCard_name() + "and " + card2.getCard_name() + " had a draw\n");
+            logger.newLogEntry(card1.getCard_name() + " and " + card2.getCard_name() + " had a draw\n");
         }
     }
 
@@ -170,9 +178,9 @@ public class Battle_impl implements Battle
     public double calculateELO(ArrayList<Integer> user1, ArrayList<Integer> user2, double endStatus) {
         int k;
         // get elo at index 3
-        int estimated = 1/(1+10^((user2.get(3) - user1.get(3))/400));
-        if(user1.get(3) < 2400) { k = 20; }
+        int estimated = 1/(1+10^((user2.get(2) - user1.get(2))/400));
+        if(user1.get(2) < 2400) { k = 20; }
         else { k = 10; }
-        return user1.get(3) + k * (endStatus - estimated);
+        return user1.get(2) + k * (endStatus - estimated);
     }
 }

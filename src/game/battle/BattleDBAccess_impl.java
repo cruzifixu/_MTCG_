@@ -36,31 +36,6 @@ public class BattleDBAccess_impl implements BattleDBAccess{
     }
 
     @Override
-    public String checkOnePlayerStatus(String user) {
-        try
-        {
-            Connection conn = DatabaseConn_impl.getInstance().getConn();
-            // ----- PREPARED STATEMENT ----- //
-            PreparedStatement stmt = conn.prepareStatement(
-                    "SELECT status FROM users WHERE username = ?;"
-            );
-            stmt.setString(1, user);
-            ResultSet res = stmt.executeQuery();
-
-            StringBuilder userData = new StringBuilder();
-            if(res.next())
-            { userData.append(res.getString(1)); }
-
-            res.close();
-            stmt.close();
-            conn.close();
-            return userData.toString();
-        } catch (SQLException e) { e.printStackTrace(); }
-
-        return null;
-    }
-
-    @Override
     public String checkAllPlayerStatus(String user)
     {
         try
@@ -70,14 +45,14 @@ public class BattleDBAccess_impl implements BattleDBAccess{
             PreparedStatement stmt = conn.prepareStatement(
                     "SELECT id, username, coins, nickname, status FROM users WHERE status = ?;"
             );
-            stmt.setString(1, "waiting for battle...");
+            stmt.setString(1, "ready for battle...");
             ResultSet res = stmt.executeQuery();
 
             StringBuilder userData = new StringBuilder();
             while (res.next())
             {
                 // --- so user is not added - get first waiting user
-                if(!res.getString(1).equals(user))
+                if(!(res.getString(2).equals(user)))
                 {
                     userData.append(res.getString(2)); // Username
                     //userData.append("{\"id\":\"").append(res.getString(1))

@@ -1,10 +1,5 @@
 package game.rest_api;
-
-import java.io.BufferedReader;
-
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.List;
 
 public interface HttpRequest {
 
