@@ -170,8 +170,6 @@ public class Battle_impl implements Battle
                 if(card3.getDamage() > card1.getDamage())
                 {card1.setDamage(card3.getDamage()); }
 
-                System.out.println("LOSE STREAK 1");
-
                 loseCountUser1 = 0;
             }
         }
@@ -199,8 +197,6 @@ public class Battle_impl implements Battle
                 // if damage to second card bigger than of card one - set damage to card1 to damage to second card
                 if(card3.getDamage() > card2.getDamage())
                 {card2.setDamage(card3.getDamage()); }
-
-                System.out.println("LOSE STREAK 2");
 
                 loseCountUser2 = 0;
             }
