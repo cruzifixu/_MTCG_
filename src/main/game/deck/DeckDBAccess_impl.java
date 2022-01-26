@@ -16,7 +16,7 @@ public class DeckDBAccess_impl implements DeckDBAccess
             Connection conn = DatabaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
-                    "SELECT * FROM cards WHERE ownedby = ? AND in_deck = ?;"
+                    "SELECT * FROM card WHERE ownedby = ? AND in_deck = ?;"
             );
             stmt.setString(1, username);
             stmt.setBoolean(2, true);
@@ -66,7 +66,7 @@ public class DeckDBAccess_impl implements DeckDBAccess
             Connection conn = DatabaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
-                    "SELECT * FROM cards WHERE ownedby = ? AND in_deck = ?;"
+                    "SELECT * FROM card WHERE ownedby = ? AND in_deck = ?;"
             );
             stmt.setString(1, username);
             stmt.setBoolean(2, true);
@@ -106,7 +106,7 @@ public class DeckDBAccess_impl implements DeckDBAccess
         Connection conn = DatabaseConn_impl.getInstance().getConn();
         // ----- PREPARED STATEMENT ----- //
         PreparedStatement stmt = conn.prepareStatement(
-                "UPDATE cards SET in_deck = ? WHERE id = ?;"
+                "UPDATE card SET in_deck = ? WHERE id = ?;"
         );
         stmt.setBoolean(1, true);
         stmt.setString(2, id);

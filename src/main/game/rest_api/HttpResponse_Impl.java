@@ -65,7 +65,6 @@ public class HttpResponse_Impl implements HttpResponse
 
         System.out.println(bob);
         this.setRESPONSE(bob.toString());
-        //this.RESPONSE = bob.toString();
     }
 
 }

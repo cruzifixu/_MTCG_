@@ -102,7 +102,7 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
             case "transactions" -> {
                 // true if authorized
                 if(getCardsDBAccess().acquirePackage(req.getAuthorizedUser()))
-                { return new HttpResponse_Impl(200, "package bought"); }
+                { return new HttpResponse_Impl(200, "package bought\n" + getCardsDBAccess().showTransactionHistory(req.getAuthorizedUser())); }
                 else { return new HttpResponse_Impl(400, "not enough money"); }
             }
             case "tradings" -> {
@@ -139,11 +139,6 @@ public class HttpRequestHandler_Impl implements HttpRequestHandler
                 if(authUser == null)
                 { return new HttpResponse_Impl(401, "not authorized"); }
                 getBattleDBAccess().ChangePlayerStatus(authUser, "ready for battle...");
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 // --- get other user to battle with
                 String otherUser = getBattleDBAccess().checkAllPlayerStatus(authUser);
                 if(otherUser != null && !otherUser.equals(""))

@@ -3,10 +3,13 @@ package game.rest_api;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class RestServer_impl implements Runnable {
     private static ServerSocket listener = null;
     private final int port;
+    private ExecutorService pool = Executors.newSingleThreadExecutor();
 
     public RestServer_impl(int port)
     {
@@ -26,7 +29,7 @@ public class RestServer_impl implements Runnable {
                 Socket socket = listener.accept();
                 System.out.println("New connection from: " + listener.getLocalPort());
                 // create Thread - runs outside of thread
-                Thread thread = new Thread(() -> {
+                pool.execute(() -> {
                     try {
                         InputStream is = socket.getInputStream();
                         InputStreamReader isr = new InputStreamReader(is);
@@ -43,8 +46,6 @@ public class RestServer_impl implements Runnable {
                         e.printStackTrace();
                     }
                 });
-                thread.start();
-
             }
         }
         catch (IOException e)

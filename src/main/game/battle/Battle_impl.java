@@ -14,6 +14,10 @@ public class Battle_impl implements Battle
     @Getter @Setter
     String user2;
     @Getter
+    int loseCountUser1 = 0;
+    @Getter
+    int loseCountUser2 = 0;
+    @Getter
     ArrayList<Cards_impl> user1card;
     @Getter
     ArrayList<Cards_impl> user2card;
@@ -77,8 +81,6 @@ public class Battle_impl implements Battle
 
         UserDBAccess_impl UserDBAccess = new UserDBAccess_impl();
 
-        System.out.println("USER 1 "+user1stats);
-        System.out.println("USER 2 "+user2stats);
         // update stats of users
         // db update status back to menu/ idle
         return getBattleDBAccessImpl().ChangePlayerStatus(user1, "idle") && getBattleDBAccessImpl().ChangePlayerStatus(user2, "idle")
@@ -136,7 +138,74 @@ public class Battle_impl implements Battle
     }
 
     @Override
-    public void checkDamage(Cards_impl card1, Cards_impl card2) {
+    public void checkDamage(Cards_impl card1, Cards_impl card2)
+    {
+        Random random = new Random();
+        double oldDam = 0;
+        // ---------- SPECIAL CASE ---------- //
+        // --- IF PLAYER LOST TWO TIMES IN A ROW THEY GET A CHANCE TO DRAW ANOTHER CARD
+        // --- DAMAGE TO OTHER CARD WILL BE ADDED TO DAMAGE TO FIRST CARD
+        if(card1.getDamage() < card2.getDamage())
+        {
+            if(loseCountUser2 == 0)
+            { loseCountUser1++; }
+            else { loseCountUser2 = 0; }
+
+            // get second card of user 1
+            if(loseCountUser1 == 2)
+            {
+                Cards_impl card3 = this.user1card.get(random.nextInt(user1card.size()));
+                while(card3.getCard_name().equals(card1.getCard_name()))
+                { card3 = this.user1card.get(random.nextInt(user1card.size())); }
+
+                // save old damage so comparison is correct
+                oldDam = card2.getDamage();
+
+                checkEffectiveness(card3, card2);
+
+                // set Damage to old Damage
+                card2.setDamage(oldDam);
+
+                // if damage to second card bigger than of card one - set damage to card1 to damage to second card
+                if(card3.getDamage() > card1.getDamage())
+                {card1.setDamage(card3.getDamage()); }
+
+                System.out.println("LOSE STREAK 1");
+
+                loseCountUser1 = 0;
+            }
+        }
+        else
+        {
+            if(loseCountUser1 == 0)
+            { loseCountUser2++; }
+            else { loseCountUser1 = 0; }
+
+            // get second card of user 1
+            if(loseCountUser2 == 2)
+            {
+                Cards_impl card3 = this.user2card.get(random.nextInt(user2card.size()));
+                while(card3.getCard_name().equals(card1.getCard_name()))
+                { card3 = this.user2card.get(random.nextInt(user2card.size())); }
+
+                // save old damage so comparison is correct
+                oldDam = card1.getDamage();
+
+                checkEffectiveness(card3, card1);
+
+                // set Damage to old Damage
+                card1.setDamage(oldDam);
+
+                // if damage to second card bigger than of card one - set damage to card1 to damage to second card
+                if(card3.getDamage() > card2.getDamage())
+                {card2.setDamage(card3.getDamage()); }
+
+                System.out.println("LOSE STREAK 2");
+
+                loseCountUser2 = 0;
+            }
+        }
+
         // card 1 loses
         if(card1.getDamage() < card2.getDamage())
         {

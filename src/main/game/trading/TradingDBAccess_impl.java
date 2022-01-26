@@ -62,7 +62,7 @@ public class TradingDBAccess_impl implements TradingDBAccess
             stmt.close();
 
             PreparedStatement stmt2 = conn.prepareStatement(
-                    "UPDATE cards SET for_trading = ? WHERE id = ?;"
+                    "UPDATE card SET for_trading = ? WHERE id = ?;"
             );
             stmt2.setBoolean(1, true);
             stmt2.setString(2, trade.getCard_to_trade());
@@ -129,7 +129,7 @@ public class TradingDBAccess_impl implements TradingDBAccess
             }
             stmt.close();
             PreparedStatement stmt2 = conn.prepareStatement(
-                    "UPDATE cards SET for_trading = ? WHERE id = ?;"
+                    "UPDATE card SET for_trading = ? WHERE id = ?;"
             );
             stmt2.setBoolean(1, false);
             stmt2.setString(2, card_id);
@@ -157,7 +157,7 @@ public class TradingDBAccess_impl implements TradingDBAccess
         try {
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
-                    "UPDATE cards SET ownedby = ?, for_trading = ? WHERE id = ?;"
+                    "UPDATE card SET ownedby = ?, for_trading = ? WHERE id = ?;"
             );
             stmt.setString(1, NewOwner);
             stmt.setBoolean(2, false);

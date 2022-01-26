@@ -8,8 +8,8 @@ public class Main {
 
     public static void main(String[] args) throws Exception
     {
-        Thread restService = new Thread(new RestServer_impl(10001));
-        restService.start();
+        RestServer_impl res = new RestServer_impl(10001);
+        res.run();
     }
 
 }

@@ -58,9 +58,6 @@ public class HttpRequest_Impl implements HttpRequest
                 if(TotalLength >= ContentLength) break;
             }
         }
-
-
-        //System.out.println(bob.toString());
         return bob.toString();
     }
 

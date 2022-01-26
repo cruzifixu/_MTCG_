@@ -2,6 +2,7 @@ package game.card;
 
 import game.db.DatabaseConn_impl;
 import java.sql.*;
+import java.time.Instant;
 
 public class CardsDBAccess_impl implements CardsDBAccess
 {
@@ -12,7 +13,7 @@ public class CardsDBAccess_impl implements CardsDBAccess
             Connection conn = DatabaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO packages (ownedby) VALUES (?);", Statement.RETURN_GENERATED_KEYS);
+                    "INSERT INTO package (ownedby) VALUES (?);", Statement.RETURN_GENERATED_KEYS);
             stmt.setString(1, "");
             int rowsAffected = stmt.executeUpdate();
 
@@ -44,7 +45,7 @@ public class CardsDBAccess_impl implements CardsDBAccess
         Connection conn = DatabaseConn_impl.getInstance().getConn();
         // ----- PREPARED STATEMENT ----- //
         PreparedStatement sta = conn.prepareStatement(
-                "INSERT INTO cards (id, name,element_type, damage, package_num) VALUES (?, ?, ?, ?, ?);"
+                "INSERT INTO card (id, name,element_type, damage, package_num) VALUES (?, ?, ?, ?, ?);"
         );
         sta.setString(1, card.getId());                     // set id
         sta.setString(2, card.getCard_name());              // set card name
@@ -56,7 +57,7 @@ public class CardsDBAccess_impl implements CardsDBAccess
         // couldn't get executed
         if (affectedRows == 0) {
             PreparedStatement stmt2 = conn.prepareStatement(
-                    "DELETE FROM packages WHERE package_num = ?;"
+                    "DELETE FROM package WHERE package_num = ?;"
             );
             stmt2.setInt(1, card.getPackage_num());
             stmt2.executeUpdate();
@@ -112,7 +113,7 @@ public class CardsDBAccess_impl implements CardsDBAccess
             Connection conn = DatabaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
-                    "SELECT package_num FROM packages WHERE ownedby = ?;"
+                    "SELECT package_num FROM package WHERE ownedby = ?;"
             );
             stmt.setString(1, "");
             ResultSet res = stmt.executeQuery();
@@ -122,17 +123,19 @@ public class CardsDBAccess_impl implements CardsDBAccess
                 {
                     // ----- PREPARED STATEMENT ----- //
                     PreparedStatement sta = conn.prepareStatement(
-                            "UPDATE packages SET ownedby = ? WHERE package_num = ?;"
+                            "UPDATE package SET ownedby = ? WHERE package_num = ?;"
                     );
                     sta.setString(1, username);
                     sta.setInt(2, res.getInt(1));
 
                     // ----- PREPARED STATEMENT ----- //
                     PreparedStatement sta2 = conn.prepareStatement(
-                            "UPDATE cards SET ownedby = ? WHERE package_num = ?;"
+                            "UPDATE card SET ownedby = ? WHERE package_num = ?;"
                     );
                     sta2.setString(1, username);
                     sta2.setInt(2, res.getInt(1));
+
+                    this.addTransactionEntry(username, String.valueOf(res.getInt(1)));
 
                     int affectedRows = sta.executeUpdate(), affectedRows2 = sta2.executeUpdate();
 
@@ -141,7 +144,7 @@ public class CardsDBAccess_impl implements CardsDBAccess
                         // ----- PREPARED STATEMENT ----- //
                         // reverse Stmt so no one owns this
                         PreparedStatement reverseStmt = conn.prepareStatement(
-                                "UPDATE packages SET ownedby = ? WHERE package_num = ?;"
+                                "UPDATE package SET ownedby = ? WHERE package_num = ?;"
                         );
                         reverseStmt.setString(1, "");
                         reverseStmt.setInt(2, res.getInt(1));
@@ -158,7 +161,7 @@ public class CardsDBAccess_impl implements CardsDBAccess
                         // ----- PREPARED STATEMENT ----- //
                         // reverse Stmt so no one owns this
                         PreparedStatement reverseStmt = conn.prepareStatement(
-                                "UPDATE packages SET ownedby = ? WHERE package_num = ?;"
+                                "UPDATE package SET ownedby = ? WHERE package_num = ?;"
                         );
                         reverseStmt.setString(1, "");
                         reverseStmt.setInt(2, res.getInt(1));
@@ -223,6 +226,68 @@ public class CardsDBAccess_impl implements CardsDBAccess
     }
 
     @Override
+    public boolean addTransactionEntry(String username, String package_id) {
+        try {
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
+            // ----- PREPARED STATEMENT ----- //
+            PreparedStatement stmt = conn.prepareStatement(
+                    "INSERT INTO transaction (username, item_bought, time_stamp) VALUES (?, ?, ?);"
+            );
+            stmt.setString(1, username);
+            stmt.setString(2, "package " + package_id);
+            stmt.setTimestamp(3, Timestamp.from(Instant.now()));
+            int rowsAffected = stmt.executeUpdate();
+
+            if(rowsAffected == 0) {
+                stmt.close();
+                conn.close();
+                return false;
+            }
+
+            stmt.close();
+            conn.close();
+
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public String showTransactionHistory(String username) {
+        try
+        {
+            Connection conn = DatabaseConn_impl.getInstance().getConn();
+            // ----- PREPARED STATEMENT ----- //
+            PreparedStatement stmt = conn.prepareStatement(
+                    "SELECT * FROM transaction WHERE username = ?;"
+            );
+            stmt.setString(1, username);
+            ResultSet res = stmt.executeQuery();
+
+            StringBuilder userData = new StringBuilder();
+            while(res.next())
+            {
+                userData.append("{\"id\":" + "\"").append(res.getString(1)).append("\",")
+                        .append("\"username\":" + "\"").append(res.getString(2)).append("\",")
+                        .append("\"item_bought\":" + "\"").append(res.getString(3)).append("\",")
+                        .append("\"time_stamp\":" + "\"").append(res.getTimestamp(4)).append("\"}\n")
+                ;
+            }
+
+            res.close();
+            stmt.close();
+            conn.close();
+            return userData.toString();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    @Override
     public String showCards(String user)
     {
         try
@@ -230,7 +295,7 @@ public class CardsDBAccess_impl implements CardsDBAccess
           Connection conn = DatabaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
           PreparedStatement stmt = conn.prepareStatement(
-                  "SELECT * FROM cards WHERE ownedby = ?;"
+                  "SELECT * FROM card WHERE ownedby = ?;"
           );
           stmt.setString(1, user);
           ResultSet res = stmt.executeQuery();
@@ -265,7 +330,7 @@ public class CardsDBAccess_impl implements CardsDBAccess
             Connection conn = DatabaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
-                    "SELECT * FROM cards WHERE id = ?;"
+                    "SELECT * FROM card WHERE id = ?;"
             );
             stmt.setString(1, ID);
             ResultSet res = stmt.executeQuery();
@@ -300,7 +365,7 @@ public class CardsDBAccess_impl implements CardsDBAccess
             Connection conn = DatabaseConn_impl.getInstance().getConn();
             // ----- PREPARED STATEMENT ----- //
             PreparedStatement stmt = conn.prepareStatement(
-                    "SELECT ownedby FROM cards WHERE id = ?;"
+                    "SELECT ownedby FROM card WHERE id = ?;"
             );
             stmt.setString(1, ID);
             ResultSet res = stmt.executeQuery();
